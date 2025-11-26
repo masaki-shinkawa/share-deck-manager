@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>デッキマネージャー - レイアウト比較</title>
+    <meta name="description" content="カードゲームデッキ管理システムの5種類のレイアウトを比較">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -170,4 +171,224 @@
 
         .layout-4 {
             background: linear-gradient(135deg, #F97316, #06B6D4);
-            <h1 class="title">🎴 デッキマネージャー</h1><p class="subtitle">5種類のレイアウトから選択してください</p></header><div class="layout-grid">< !-- Layout 1 --><div class="layout-card"><div class="layout-preview layout-1"><span style="position: relative; z-index: 1;">🎨</span></div><div class="layout-content"><span class="layout-number">Layout 1</span><h2 class="layout-title">カードグリッド</h2><p class="layout-description">モダンなグラスモーフィズムデザイン。カード形式でデッキを視覚的に整理します。</p><div class="features"><div class="feature-item"><span class="feature-icon">✓</span><span>グラスモーフィズム効果</span></div><div class="feature-item"><span class="feature-icon">✓</span><span>サイドバーフィルター</span></div><div class="feature-item"><span class="feature-icon">✓</span><span>カラフルなグラデーション</span></div></div><a href="layout1.html" class="btn-view">このレイアウトを見る →</a></div></div>< !-- Layout 2 --><div class="layout-card"><div class="layout-preview layout-2"><span style="position: relative; z-index: 1;">📊</span></div><div class="layout-content"><span class="layout-number">Layout 2</span><h2 class="layout-title">テーブル/リスト</h2><p class="layout-description">データ重視のテーブル形式。大量のデッキを効率的に管理できます。</p><div class="features"><div class="feature-item"><span class="feature-icon">✓</span><span>検索機能付き</span></div><div class="feature-item"><span class="feature-icon">✓</span><span>ソート可能なテーブル</span></div><div class="feature-item"><span class="feature-icon">✓</span><span>プロフェッショナルなデザイン</span></div></div><a href="layout2.html" class="btn-view">このレイアウトを見る →</a></div></div>< !-- Layout 3 --><div class="layout-card"><div class="layout-preview layout-3"><span style="position: relative; z-index: 1;">🎯</span></div><div class="layout-content"><span class="layout-number">Layout 3</span><h2 class="layout-title">カンバンボード</h2><p class="layout-description">ユーザーやゲーム別に列で整理。視覚的に分類したい方に最適です。</p><div class="features"><div class="feature-item"><span class="feature-icon">✓</span><span>列ベースのレイアウト</span></div><div class="feature-item"><span class="feature-icon">✓</span><span>グループ切り替え機能</span></div><div class="feature-item"><span class="feature-icon">✓</span><span>スクロール可能なカラム</span></div></div><a href="layout3.html" class="btn-view">このレイアウトを見る →</a></div></div>< !-- Layout 4 --><div class="layout-card"><div class="layout-preview layout-4"><span style="position: relative; z-index: 1;">📱</span></div><div class="layout-content"><span class="layout-number">Layout 4</span><h2 class="layout-title">サイドバーナビ</h2><p class="layout-description">3カラムレイアウト。左にナビゲーション、右に詳細パネルを配置。</p><div class="features"><div class="feature-item"><span class="feature-icon">✓</span><span>詳細パネル付き</span></div><div class="feature-item"><span class="feature-icon">✓</span><span>グリッド/リスト切替</span></div><div class="feature-item"><span class="feature-icon">✓</span><span>アプリライクなUI</span></div></div><a href="layout4.html" class="btn-view">このレイアウトを見る →</a></div></div>< !-- Layout 5 --><div class="layout-card"><div class="layout-preview layout-5"><span style="position: relative; z-index: 1;">📈</span></div><div class="layout-content"><span class="layout-number">Layout 5</span><h2 class="layout-title">ダッシュボード</h2><p class="layout-description">統計情報とデータ可視化を重視。全体像を把握したい方向けです。</p><div class="features"><div class="feature-item"><span class="feature-icon">✓</span><span>統計カード表示</span></div><div class="feature-item"><span class="feature-icon">✓</span><span>データ可視化</span></div><div class="feature-item"><span class="feature-icon">✓</span><span>明るいテーマ</span></div></div><a href="layout5.html" class="btn-view">このレイアウトを見る →</a></div></div></div></div></body></html>
+        }
+
+        .layout-5 {
+            background: linear-gradient(135deg, #6366F1, #3B82F6);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            body {
+                padding: 2rem 1.5rem;
+            }
+
+            .layout-grid {
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                gap: 1.5rem;
+            }
+
+            .layout-preview {
+                height: 240px;
+                font-size: 3.5rem;
+            }
+
+            .layout-content {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1.5rem 1rem;
+            }
+
+            .header {
+                margin-bottom: 2rem;
+            }
+
+            .title {
+                font-size: 2rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .layout-grid {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+
+            .layout-preview {
+                height: 200px;
+                font-size: 3rem;
+            }
+
+            .layout-content {
+                padding: 1.25rem;
+            }
+
+            .layout-title {
+                font-size: 1.25rem;
+            }
+
+            .layout-description {
+                font-size: 0.875rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 1rem;
+            }
+
+            .title {
+                font-size: 1.75rem;
+            }
+
+            .subtitle {
+                font-size: 0.9375rem;
+            }
+
+            .layout-preview {
+                height: 180px;
+                font-size: 2.5rem;
+            }
+
+            .layout-number {
+                font-size: 0.8125rem;
+                padding: 0.3125rem 0.875rem;
+            }
+
+            .btn-view {
+                padding: 0.875rem;
+                font-size: 0.9375rem;
+            }
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+            .layout-card:hover {
+                transform: none;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            }
+
+            .layout-card:active {
+                transform: scale(0.98);
+            }
+
+            .btn-view:hover {
+                transform: none;
+                box-shadow: none;
+            }
+
+            .btn-view:active {
+                transform: scale(0.98);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">🎴 デッキマネージャー</h1>
+            <p class="subtitle">5種類のレイアウトから選択してください</p>
+        </header>
+
+        <div class="layout-grid">
+            <!-- Layout 1 -->
+            <div class="layout-card">
+                <div class="layout-preview layout-1">
+                    <span style="position: relative; z-index: 1;">🎨</span>
+                </div>
+                <div class="layout-content">
+                    <span class="layout-number">Layout 1</span>
+                    <h2 class="layout-title">カードグリッド</h2>
+                    <p class="layout-description">モダンなグラスモーフィズムデザイン。カード形式でデッキを視覚的に整理します。</p>
+                    <div class="features">
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>グラスモーフィズム効果</span></div>
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>サイドバーフィルター</span></div>
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>レスポンシブ対応</span></div>
+                    </div>
+                    <a href="layout1.html" class="btn-view">このレイアウトを見る →</a>
+                </div>
+            </div>
+
+            <!-- Layout 2 -->
+            <div class="layout-card">
+                <div class="layout-preview layout-2">
+                    <span style="position: relative; z-index: 1;">📊</span>
+                </div>
+                <div class="layout-content">
+                    <span class="layout-number">Layout 2</span>
+                    <h2 class="layout-title">テーブル/リスト</h2>
+                    <p class="layout-description">データ重視のテーブル形式。大量のデッキを効率的に管理できます。</p>
+                    <div class="features">
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>検索機能付き</span></div>
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>プロフェッショナルなデザイン</span></div>
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>レスポンシブ対応</span></div>
+                    </div>
+                    <a href="layout2.html" class="btn-view">このレイアウトを見る →</a>
+                </div>
+            </div>
+
+            <!-- Layout 3 -->
+            <div class="layout-card">
+                <div class="layout-preview layout-3">
+                    <span style="position: relative; z-index: 1;">🎯</span>
+                </div>
+                <div class="layout-content">
+                    <span class="layout-number">Layout 3</span>
+                    <h2 class="layout-title">カンバンボード</h2>
+                    <p class="layout-description">ユーザーやゲーム別に列で整理。視覚的に分類したい方に最適です。</p>
+                    <div class="features">
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>列ベースのレイアウト</span></div>
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>グループ切り替え機能</span></div>
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>レスポンシブ対応</span></div>
+                    </div>
+                    <a href="layout3.html" class="btn-view">このレイアウトを見る →</a>
+                </div>
+            </div>
+
+            <!-- Layout 4 -->
+            <div class="layout-card">
+                <div class="layout-preview layout-4">
+                    <span style="position: relative; z-index: 1;">📱</span>
+                </div>
+                <div class="layout-content">
+                    <span class="layout-number">Layout 4</span>
+                    <h2 class="layout-title">サイドバーナビ</h2>
+                    <p class="layout-description">3カラムレイアウト。左にナビゲーション、右に詳細パネルを配置。</p>
+                    <div class="features">
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>詳細パネル付き</span></div>
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>グリッド/リスト切替</span></div>
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>レスポンシブ対応</span></div>
+                    </div>
+                    <a href="layout4.html" class="btn-view">このレイアウトを見る →</a>
+                </div>
+            </div>
+
+            <!-- Layout 5 -->
+            <div class="layout-card">
+                <div class="layout-preview layout-5">
+                    <span style="position: relative; z-index: 1;">📈</span>
+                </div>
+                <div class="layout-content">
+                    <span class="layout-number">Layout 5</span>
+                    <h2 class="layout-title">ダッシュボード</h2>
+                    <p class="layout-description">統計情報とデータ可視化を重視。全体像を把握したい方向けです。</p>
+                    <div class="features">
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>統計カード表示</span></div>
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>データ可視化</span></div>
+                        <div class="feature-item"><span class="feature-icon">✓</span><span>レスポンシブ対応</span></div>
+                    </div>
+                    <a href="layout5.html" class="btn-view">このレイアウトを見る →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
