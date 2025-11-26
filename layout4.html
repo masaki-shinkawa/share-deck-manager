@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デッキ管理 - サイドバーナビ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="layout4.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- Left Sidebar -->
+        <aside class="left-sidebar">
+            <div class="sidebar-header">
+                <h1 class="sidebar-logo">🎴 DeckManager</h1>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <h3 class="nav-section-title">プレイヤー</h3>
+                    <ul class="nav-list" id="userNav">
+                        <li class="nav-item active" data-user-id="all">
+                            <span class="nav-icon">👥</span>
+                            <span class="nav-label">すべて</span>
+                            <span class="nav-badge" id="allCount">10</span>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="sidebar-btn" id="addDeckBtn">
+                    <span>➕</span>
+                    <span>デッキを追加</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-area">
+            <header class="content-header">
+                <div class="header-left">
+                    <h2 class="content-title" id="contentTitle">すべてのデッキ</h2>
+                    <p class="content-subtitle" id="contentSubtitle">10個のデッキ</p>
+                </div>
+                <div class="header-right">
+                    <div class="view-options">
+                        <button class="view-btn active" id="gridView">
+                            <span>⊞</span>
+                        </button>
+                        <button class="view-btn" id="listView">
+                            <span>☰</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <div class="deck-display" id="deckDisplay">
+                    <!-- Decks will be inserted here -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Panel (Detail View) -->
+        <aside class="right-panel" id="rightPanel">
+            <div class="panel-header">
+                <h3 class="panel-title">デッキ詳細</h3>
+                <button class="panel-close" id="closePanel">✕</button>
+            </div>
+            <div class="panel-content">
+                <p class="panel-placeholder">デッキを選択して詳細を表示</p>
+            </div>
+        </aside>
+    </div>
+
+    <script src="mock-data.js"></script>
+    <script src="layout4.js"></script>
+</body>
+
+</html>

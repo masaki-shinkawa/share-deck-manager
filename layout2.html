@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デッキ管理 - テーブル形式</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="layout2.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="app-title">📊 デッキマネージャー</h1>
+                <p class="app-subtitle">テーブル/リスト形式</p>
+            </div>
+            <div class="header-actions">
+                <input type="text" class="search-input" placeholder="🔍 デッキを検索..." id="searchInput">
+                <button class="btn btn-primary" id="addDeckBtn">+ デッキを追加</button>
+            </div>
+        </header>
+
+        <div class="toolbar">
+            <div class="filter-tabs" id="filterTabs">
+                <button class="filter-tab active" data-user-id="all">すべて</button>
+            </div>
+            <div class="view-toggle">
+                <span class="deck-count" id="deckCount">10 デッキ</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="table-container">
+                <table class="deck-table">
+                    <thead>
+                        <tr>
+                            <th>デッキ名</th>
+                            <th>ゲーム</th>
+                            <th>所有者</th>
+                            <th>カード枚数</th>
+                            <th>フォーマット</th>
+                            <th>カラー</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deckTableBody">
+                        <!-- Rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="mock-data.js"></script>
+    <script src="layout2.js"></script>
+</body>
+
+</html>

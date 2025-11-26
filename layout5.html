@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デッキ管理 - ダッシュボード</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="layout5.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Top Navigation -->
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <h1 class="brand-logo">🎴 DeckManager</h1>
+                <span class="brand-subtitle">Dashboard</span>
+            </div>
+            <div class="nav-actions">
+                <button class="icon-btn">🔔</button>
+                <button class="icon-btn">⚙️</button>
+                <div class="user-profile">
+                    <span>👤</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Dashboard -->
+        <main class="dashboard">
+            <!-- Stats Overview -->
+            <section class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #3B82F6, #2563EB)">📚</div>
+                    <div class="stat-info">
+                        <p class="stat-label">総デッキ数</p>
+                        <h3 class="stat-value" id="totalDecks">10</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #10B981, #059669)">👥</div>
+                    <div class="stat-info">
+                        <p class="stat-label">プレイヤー数</p>
+                        <h3 class="stat-value" id="totalUsers">4</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #F59E0B, #D97706)">🎮</div>
+                    <div class="stat-info">
+                        <p class="stat-label">ゲーム種類</p>
+                        <h3 class="stat-value" id="totalGames">3</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #EF4444, #DC2626)">🃏</div>
+                    <div class="stat-info">
+                        <p class="stat-label">総カード枚数</p>
+                        <h3 class="stat-value" id="totalCards">560</h3>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Game Distribution -->
+                <section class="panel game-distribution">
+                    <div class="panel-header">
+                        <h2 class="panel-title">ゲーム別分布</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="game-list" id="gameList">
+                            <!-- Game items will be inserted here -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Player List -->
+                <section class="panel player-list">
+                    <div class="panel-header">
+                        <h2 class="panel-title">プレイヤー一覧</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="players" id="playerList">
+                            <!-- Player items will be inserted here -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recent Decks -->
+                <section class="panel recent-decks">
+                    <div class="panel-header">
+                        <h2 class="panel-title">デッキ一覧</h2>
+                        <button class="btn-link" id="addDeckBtn">+ 追加</button>
+                    </div>
+                    <div class="panel-body">
+                        <div class="deck-list" id="deckList">
+                            <!-- Deck items will be inserted here -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="mock-data.js"></script>
+    <script src="layout5.js"></script>
+</body>
+
+</html>
