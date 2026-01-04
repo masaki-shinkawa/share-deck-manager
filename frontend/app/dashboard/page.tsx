@@ -2,12 +2,46 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import SignOutButton from "@/components/SignOutButton";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export default async function DashboardPage() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
 
   if (!session || !session.user) {
     redirect("/login");
+  }
+
+  // Sync user with backend
+  let shouldRedirectToOnboarding = false;
+
+  try {
+    const res = await fetch("http://localhost:8000/api/v1/users/sync", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.idToken}`,
+      },
+      body: JSON.stringify({
+        email: session.user.email,
+        picture: session.user.image,
+      }),
+    });
+
+    if (res.ok) {
+        const user = await res.json();
+        if (!user.nickname) {
+            shouldRedirectToOnboarding = true;
+        }
+    } else {
+        console.error("Failed to sync user", await res.text());
+    }
+  } catch (error) {
+      console.error("Error syncing user", error);
+      // In a real app, might want to show an error page or not block dashboard
+  }
+
+  if (shouldRedirectToOnboarding) {
+    redirect("/onboarding");
   }
 
   return (
@@ -58,3 +92,4 @@ export default async function DashboardPage() {
     </div>
   );
 }
+

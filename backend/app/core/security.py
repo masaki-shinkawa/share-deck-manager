@@ -3,6 +3,9 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 import requests
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 security = HTTPBearer()
 
