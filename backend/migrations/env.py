@@ -26,6 +26,7 @@ config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
 # for 'autogenerate' support
 from sqlmodel import SQLModel
 from app.models.user import User  # Needed for SQLModel to detect models
+from app.models.deck import Deck  # Needed for SQLModel to detect models
 
 target_metadata = SQLModel.metadata
 

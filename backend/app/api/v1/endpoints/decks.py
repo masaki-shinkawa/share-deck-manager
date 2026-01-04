@@ -1,0 +1,160 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from datetime import datetime
+import uuid
+
+from app.db.session import get_session
+from app.core.security import verify_token
+from app.models.deck import Deck
+from app.models.user import User
+from app.schemas.deck import DeckCreate, DeckUpdate, DeckPublic
+
+router = APIRouter()
+
+@router.get("/", response_model=list[DeckPublic])
+async def list_decks(
+    payload: dict = Depends(verify_token),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get all decks for the current user"""
+    google_id = payload["sub"]
+    
+    # Get user by google_id
+    result = await session.execute(
+        select(User).where(User.google_id == google_id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = await session.execute(
+        select(Deck).where(Deck.user_id == user.id)
+    )
+    decks = result.scalars().all()
+    return decks
+
+@router.post("/", response_model=DeckPublic, status_code=201)
+async def create_deck(
+    deck_data: DeckCreate,
+    payload: dict = Depends(verify_token),
+    session: AsyncSession = Depends(get_session)
+):
+    """Create a new deck"""
+    google_id = payload["sub"]
+    
+    # Get user by google_id
+    result = await session.execute(
+        select(User).where(User.google_id == google_id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    deck = Deck(
+        user_id=user.id,
+        name=deck_data.name
+    )
+    
+    session.add(deck)
+    await session.commit()
+    await session.refresh(deck)
+    
+    return deck
+
+@router.get("/{deck_id}", response_model=DeckPublic)
+async def get_deck(
+    deck_id: uuid.UUID,
+    payload: dict = Depends(verify_token),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get a specific deck"""
+    google_id = payload["sub"]
+    
+    # Get user by google_id
+    result = await session.execute(
+        select(User).where(User.google_id == google_id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = await session.execute(
+        select(Deck).where(Deck.id == deck_id, Deck.user_id == user.id)
+    )
+    deck = result.scalar_one_or_none()
+    
+    if not deck:
+        raise HTTPException(status_code=404, detail="Deck not found")
+    
+    return deck
+
+@router.put("/{deck_id}", response_model=DeckPublic)
+async def update_deck(
+    deck_id: uuid.UUID,
+    deck_data: DeckUpdate,
+    payload: dict = Depends(verify_token),
+    session: AsyncSession = Depends(get_session)
+):
+    """Update a deck's name"""
+    google_id = payload["sub"]
+    
+    # Get user by google_id
+    result = await session.execute(
+        select(User).where(User.google_id == google_id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = await session.execute(
+        select(Deck).where(Deck.id == deck_id, Deck.user_id == user.id)
+    )
+    deck = result.scalar_one_or_none()
+    
+    if not deck:
+        raise HTTPException(status_code=404, detail="Deck not found")
+    
+    deck.name = deck_data.name
+    deck.updated_at = datetime.utcnow()
+    
+    session.add(deck)
+    await session.commit()
+    await session.refresh(deck)
+    
+    return deck
+
+@router.delete("/{deck_id}", status_code=204)
+async def delete_deck(
+    deck_id: uuid.UUID,
+    payload: dict = Depends(verify_token),
+    session: AsyncSession = Depends(get_session)
+):
+    """Delete a deck"""
+    google_id = payload["sub"]
+    
+    # Get user by google_id
+    result = await session.execute(
+        select(User).where(User.google_id == google_id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = await session.execute(
+        select(Deck).where(Deck.id == deck_id, Deck.user_id == user.id)
+    )
+    deck = result.scalar_one_or_none()
+    
+    if not deck:
+        raise HTTPException(status_code=404, detail="Deck not found")
+    
+    await session.delete(deck)
+    await session.commit()
+    
+    return None
