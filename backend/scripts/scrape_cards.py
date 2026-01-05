@@ -108,13 +108,11 @@ def parse_cards(html):
             block_div = element.select_one(".block")
             if block_div:
                 text = block_div.get_text(strip=True)
-                # "ブロック"を除去
-                block_str = text.replace("ブロック", "").strip()
-                try:
-                    block_icon = int(block_str)
-                except ValueError:
-                    # 数値でない場合は0などのデフォルト値
-                    block_icon = 0
+                # 数字のみを抽出
+                import re
+                nums = re.findall(r'\d+', text)
+                if nums:
+                    block_icon = int(nums[0])
             
             cards.append({
                 "card_id": card_id,
