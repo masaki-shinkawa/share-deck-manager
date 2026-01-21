@@ -29,7 +29,7 @@ export default function NicknameForm({ idToken }: NicknameFormProps) {
       });
 
       if (response.ok) {
-        router.push("/dashboard");
+        router.push("/");
       } else {
         console.error("Failed to update nickname");
       }
