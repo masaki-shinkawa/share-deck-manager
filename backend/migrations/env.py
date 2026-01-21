@@ -20,7 +20,12 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+# Convert DATABASE_URL to async driver format
+database_url = os.environ["DATABASE_URL"]
+if database_url.startswith("postgresql://"):
+    database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+config.set_main_option("sqlalchemy.url", database_url)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
