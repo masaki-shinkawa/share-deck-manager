@@ -18,7 +18,8 @@ export default function NicknameForm({ idToken }: NicknameFormProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/api/v1/users/me", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/api/v1/users/me`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
