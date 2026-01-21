@@ -1,0 +1,29 @@
+# Production Dockerfile for FastAPI Backend
+FROM python:alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apk add --no-cache \
+    postgresql-client \
+    && apk add --no-cache --virtual .build-deps \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    openssl-dev \
+    postgresql-dev
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt \
+    && apk del .build-deps
+
+# Copy application code
+COPY . .
+
+# Expose port (Railway will override with $PORT)
+EXPOSE 8000
+
+# Run migrations and start server
+CMD sh -c 'alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}'

@@ -17,7 +17,7 @@ restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
 
 [[services.healthcheck]]
-path = "/api/v1/"
+path = "/"
 interval = 300
 timeout = 100
 
