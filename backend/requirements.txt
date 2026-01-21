@@ -43,5 +43,6 @@ websockets==15.0.1
 python-jose[cryptography]
 requests
 asyncpg
+psycopg2-binary
 alembic
 sqlmodel

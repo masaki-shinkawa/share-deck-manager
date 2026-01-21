@@ -1253,9 +1253,63 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/deck_manager_dev
 
 ---
 
+## Railway デプロイ
+
+### プロダクション環境
+
+**Platform**: Railway (https://railway.app)
+
+**デプロイ済みサービス:**
+- Backend (FastAPI): `share-deck-manager-backend`
+- Frontend (Next.js): `share-deck-manager-frontend`
+- Database: PostgreSQL (Postgres)
+
+### ログ確認コマンド
+
+```bash
+# Backend ログ
+railway logs --service share-deck-manager-backend --environment production
+
+# Frontend ログ
+railway logs --service share-deck-manager-frontend --environment production
+
+# PostgreSQL ログ
+railway logs --service Postgres --environment production
+```
+
+### デプロイ方法
+
+1. **GitHub経由の自動デプロイ**（推奨）
+   - `master` ブランチへのpush で自動デプロイ
+
+2. **手動デプロイ**
+   ```bash
+   # Railway ダッシュボードで "Deploy" ボタンをクリック
+   ```
+
+### 環境変数設定
+
+**Backend:**
+- `DATABASE_URL`: `${{Postgres.DATABASE_URL}}`（自動設定）
+- `ALLOWED_ORIGINS`: `https://<frontend-url>.up.railway.app`
+- `NEXTAUTH_SECRET`: （共通シークレット）
+
+**Frontend:**
+- `DATABASE_URL`: `${{Postgres.DATABASE_URL}}`（自動設定）
+- `NEXT_PUBLIC_API_URL`: `https://<backend-url>.up.railway.app`
+- `API_URL`: `http://backend.railway.internal:8000`
+- `NEXTAUTH_URL`: `https://<frontend-url>.up.railway.app`
+- `NEXTAUTH_SECRET`: （バックエンドと同じ）
+- `GOOGLE_CLIENT_ID`: （Google OAuth）
+- `GOOGLE_CLIENT_SECRET`: （Google OAuth）
+
+---
+
 ## メモ
 
 ### 検討したが選ばなかった選択肢
 - **Supabase**: 認証・ストレージ・リアルタイム機能が魅力的だが、Vercel完結を優先
 - **Clerk**: UIが美しく簡単だが、無料枠とコストを考慮しNextAuthを選択
 - **PlanetScale**: スキーママイグレーションが優れているが、外部キー制約なしがデメリット
+- **Vercel (Full Stack)**: Next.jsは最高だがFastAPIのサーバーレス制限（10秒タイムアウト、マイグレーション不可）が問題
+- **Cloudflare Pages/Workers**: FastAPIをそのまま使えず、大きな書き換えが必要
