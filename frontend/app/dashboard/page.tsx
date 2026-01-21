@@ -16,15 +16,23 @@ export default async function DashboardPage() {
 
   try {
     const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+    // For server-side rendering, we need to get the NextAuth JWT token
+    // We'll use the idToken from Google OAuth for now
+    // TODO: Consider using a server-side API route for better security
+    const token = (session as any).idToken;
+
     const res = await fetch(`${apiUrl}/api/v1/users/sync`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${session.idToken}`,
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({
+        google_id: session.user.id || (session as any).sub,
         email: session.user.email,
         picture: session.user.image,
+        name: session.user.name,
       }),
     });
 
