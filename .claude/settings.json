@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Glob:*",
+      "Grep:*",
+      "Bash:git status",
+      "Bash:git diff*",
+      "Bash:git log*",
+      "Bash:npm run build",
+      "Bash:pytest*",
+      "Bash:docker compose*"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

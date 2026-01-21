@@ -10,6 +10,8 @@ from app.models.deck import Deck
 from app.models.user import User
 from app.schemas.deck import DeckCreate, DeckUpdate, DeckPublic
 
+from sqlalchemy.orm import selectinload
+
 router = APIRouter()
 
 @router.get("/", response_model=list[DeckPublic])
@@ -30,7 +32,9 @@ async def list_decks(
         raise HTTPException(status_code=404, detail="User not found")
     
     result = await session.execute(
-        select(Deck).where(Deck.user_id == user.id)
+        select(Deck)
+        .where(Deck.user_id == user.id)
+        .options(selectinload(Deck.leader_card))
     )
     decks = result.scalars().all()
     return decks
@@ -55,14 +59,21 @@ async def create_deck(
     
     deck = Deck(
         user_id=user.id,
-        name=deck_data.name
+        name=deck_data.name,
+        leader_card_id=deck_data.leader_card_id
     )
     
     session.add(deck)
     await session.commit()
     await session.refresh(deck)
     
-    return deck
+    # Reload with relation
+    result = await session.execute(
+        select(Deck)
+        .where(Deck.id == deck.id)
+        .options(selectinload(Deck.leader_card))
+    )
+    return result.scalar_one()
 
 @router.get("/{deck_id}", response_model=DeckPublic)
 async def get_deck(
@@ -83,7 +94,9 @@ async def get_deck(
         raise HTTPException(status_code=404, detail="User not found")
     
     result = await session.execute(
-        select(Deck).where(Deck.id == deck_id, Deck.user_id == user.id)
+        select(Deck)
+        .where(Deck.id == deck_id, Deck.user_id == user.id)
+        .options(selectinload(Deck.leader_card))
     )
     deck = result.scalar_one_or_none()
     

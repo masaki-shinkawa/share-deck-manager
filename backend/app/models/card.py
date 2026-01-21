@@ -1,7 +1,10 @@
-from sqlmodel import SQLModel, Field
-from typing import Optional
+from sqlmodel import SQLModel, Field, Relationship
+from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
 import uuid
+
+if TYPE_CHECKING:
+    from .deck import Deck
 
 class Card(SQLModel, table=True):
     __tablename__ = "cards"
@@ -14,3 +17,6 @@ class Card(SQLModel, table=True):
     image_path: str = Field(nullable=False)
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+
+    # Relationships
+    decks: List["Deck"] = Relationship(back_populates="leader_card")

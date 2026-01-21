@@ -15,7 +15,8 @@ export default async function DashboardPage() {
   let shouldRedirectToOnboarding = false;
 
   try {
-    const res = await fetch("http://localhost:8000/api/v1/users/sync", {
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const res = await fetch(`${apiUrl}/api/v1/users/sync`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
