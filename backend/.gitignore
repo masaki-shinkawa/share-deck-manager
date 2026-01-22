@@ -3,3 +3,5 @@ __pycache__/
 .env
 card_images/
 .pytest_cache/
+*.coverage
+.coverage
