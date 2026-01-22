@@ -83,3 +83,4 @@ Desktop.ini
 # Cache
 .cache/
 .parcel-cache/
+.mcp.json
