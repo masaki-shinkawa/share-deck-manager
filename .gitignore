@@ -42,6 +42,12 @@ yarn-error.log*
 # Keep example file
 !.env.example
 
+# MCP configuration
+.mcp.json
+
+# Keep example file
+!.mcp.example.json
+
 # IDEs and editors
 .idea/
 .vscode/
