@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "googleusercontent.com",
       },
+      {
+        protocol: "https",
+        hostname: "*.railway.app",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "8000",
+      },
     ],
   },
 };

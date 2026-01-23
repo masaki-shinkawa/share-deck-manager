@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import DeckForm from "./DeckForm";
 
 interface Card {
@@ -96,11 +97,14 @@ export default function DeckList({ idToken }: DeckListProps) {
               className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-gray-800 dark:bg-zinc-900"
             >
               <div className="flex items-center gap-4">
-                <div className="h-20 w-14 flex-shrink-0 overflow-hidden rounded shadow-sm">
-                  <img
+                <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded shadow-sm">
+                  <Image
                     src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/images/${deck.leader_card.card_id}.jpg`}
                     alt={deck.leader_card.name}
+                    width={56}
+                    height={80}
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    unoptimized
                   />
                 </div>
                 <div className="flex-1 min-w-0">

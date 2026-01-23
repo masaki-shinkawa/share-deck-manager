@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { UserInfoCardProps } from "@/types/dashboard";
 
 export default function UserInfoCard({ user }: UserInfoCardProps) {
@@ -10,11 +11,16 @@ export default function UserInfoCard({ user }: UserInfoCardProps) {
       {/* Avatar */}
       <div className="flex-shrink-0">
         {user.image ? (
-          <img
-            src={user.image}
-            alt={displayName}
-            className="h-16 w-16 rounded-full bg-gradient-to-br from-teal-400 to-teal-600"
-          />
+          <div className="relative h-16 w-16 overflow-hidden rounded-full bg-gradient-to-br from-teal-400 to-teal-600">
+            <Image
+              src={user.image}
+              alt={displayName}
+              width={64}
+              height={64}
+              className="rounded-full object-cover"
+              unoptimized={!user.image.includes('googleusercontent.com')}
+            />
+          </div>
         ) : (
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-400 to-teal-600 text-2xl font-bold text-white">
             {displayName.charAt(0).toUpperCase()}

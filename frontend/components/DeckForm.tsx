@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 interface Card {
   id: string;
@@ -113,12 +114,13 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                       : "border-transparent bg-gray-50 hover:border-gray-300 dark:bg-zinc-800 dark:hover:border-gray-600"
                   }`}
                 >
-                  <div className="aspect-[2.5/3.5] overflow-hidden rounded">
-                    <img
+                  <div className="relative aspect-[2.5/3.5] overflow-hidden rounded">
+                    <Image
                       src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/images/${card.card_id}.jpg`}
                       alt={card.name}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                      loading="lazy"
+                      fill
+                      className="object-cover transition-transform group-hover:scale-105"
+                      unoptimized
                     />
                   </div>
                   <div className="mt-2 text-center">
