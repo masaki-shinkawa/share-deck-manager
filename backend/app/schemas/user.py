@@ -1,9 +1,13 @@
 from typing import Optional
 from sqlmodel import SQLModel, Field
-from pydantic import field_validator
+from pydantic import field_validator, EmailStr
 
 class UserPublic(SQLModel):
     """Public user schema - returned by API endpoints."""
+    email: str = Field(
+        ...,
+        description="User email address"
+    )
     nickname: Optional[str] = Field(
         None,
         max_length=50,
@@ -12,6 +16,10 @@ class UserPublic(SQLModel):
     role: Optional[str] = Field(
         None,
         description="User role (admin, owner, member)"
+    )
+    image: Optional[str] = Field(
+        None,
+        description="User profile image URL"
     )
 
 class UserUpdate(SQLModel):
