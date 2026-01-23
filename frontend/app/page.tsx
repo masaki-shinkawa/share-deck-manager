@@ -19,17 +19,22 @@ export default async function DashboardPage() {
 
   try {
     const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    const token = (session as any).idToken;
+    const token = session.idToken;
+
+    if (!token) {
+      console.error("No idToken in session");
+      redirect("/login");
+    }
 
     // Sync user
     const syncRes = await fetch(`${apiUrl}/api/v1/users/sync`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        google_id: session.user.id || (session as any).sub,
+        google_id: (session as any).sub,
         email: session.user.email,
         picture: session.user.image,
         name: session.user.name,
@@ -49,7 +54,7 @@ export default async function DashboardPage() {
     const meRes = await fetch(`${apiUrl}/api/v1/users/me`, {
       headers: {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
       },
     });
 
