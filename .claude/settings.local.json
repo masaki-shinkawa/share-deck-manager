@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(railway logs:*)",
+      "Bash(railway variables:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m pytest:*)"
     ],
     "deny": [],
     "ask": []

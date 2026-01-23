@@ -3,10 +3,15 @@ from sqlmodel import SQLModel, Field
 from pydantic import field_validator
 
 class UserPublic(SQLModel):
+    """Public user schema - returned by API endpoints."""
     nickname: Optional[str] = Field(
         None,
         max_length=50,
         description="User nickname (max 50 characters)"
+    )
+    role: Optional[str] = Field(
+        None,
+        description="User role (admin, owner, member)"
     )
 
 class UserUpdate(SQLModel):
