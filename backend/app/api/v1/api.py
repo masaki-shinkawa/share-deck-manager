@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import users, decks, cards
+from app.api.v1.endpoints import users, decks, cards, admin
 
 api_router = APIRouter()
 
@@ -10,3 +10,4 @@ def read_root():
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(decks.router, prefix="/decks", tags=["decks"])
 api_router.include_router(cards.router, prefix="/cards", tags=["cards"])
+api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
