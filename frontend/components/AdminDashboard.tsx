@@ -17,6 +17,39 @@ interface ScrapeResult {
   message: string;
 }
 
+interface ImageUrlStatus {
+  total_cards: number;
+  categories: {
+    r2_urls: number;
+    external_urls: number;
+    local_paths: number;
+    other: number;
+  };
+  sample_urls: Array<{
+    card_id: string;
+    image_path: string;
+  }>;
+  r2_public_url: string;
+  migration_status: {
+    migrated: number;
+    needs_migration: number;
+    is_complete: boolean;
+  };
+}
+
+interface MigrationResult {
+  status: string;
+  updated_count: number;
+  skipped_count: number;
+  total_cards: number;
+  r2_public_url: string;
+  updated_cards: Array<{
+    card_id: string;
+    old_path: string;
+    new_path: string;
+  }>;
+}
+
 interface AdminDashboardProps {
   idToken: string;
 }
@@ -27,6 +60,12 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isScraping, setIsScraping] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Image URL migration states
+  const [urlStatus, setUrlStatus] = useState<ImageUrlStatus | null>(null);
+  const [migrationResult, setMigrationResult] = useState<MigrationResult | null>(null);
+  const [isCheckingUrls, setIsCheckingUrls] = useState(false);
+  const [isMigrating, setIsMigrating] = useState(false);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -84,6 +123,67 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
       setError("Network error. Could not perform card scraping.");
     } finally {
       setIsScraping(false);
+    }
+  };
+
+  const handleCheckImageUrls = async () => {
+    setIsCheckingUrls(true);
+    setUrlStatus(null);
+    setError(null);
+
+    try {
+      const response = await fetch(`${apiUrl}/api/v1/admin/check-image-urls`, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUrlStatus(data);
+      } else if (response.status === 403) {
+        setError("Access denied. Admin privileges required.");
+      } else {
+        setError("Failed to check image URLs.");
+      }
+    } catch (err) {
+      console.error("Error checking image URLs:", err);
+      setError("Network error. Could not check image URLs.");
+    } finally {
+      setIsCheckingUrls(false);
+    }
+  };
+
+  const handleMigrateImageUrls = async () => {
+    setIsMigrating(true);
+    setMigrationResult(null);
+    setError(null);
+
+    try {
+      const response = await fetch(`${apiUrl}/api/v1/admin/migrate-image-urls`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMigrationResult(data);
+        // Refresh URL status after migration
+        await handleCheckImageUrls();
+      } else if (response.status === 403) {
+        setError("Access denied. Admin privileges required.");
+      } else {
+        setError(data.detail || "Failed to migrate image URLs.");
+      }
+    } catch (err) {
+      console.error("Error migrating image URLs:", err);
+      setError("Network error. Could not perform migration.");
+    } finally {
+      setIsMigrating(false);
     }
   };
 
@@ -393,6 +493,270 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
                   Error
                 </h3>
                 <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Image URL Migration Section */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-zinc-900">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              Image URL Migration to Cloudflare R2
+            </h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Check and migrate card image URLs from external/local paths to Cloudflare R2 storage
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={handleCheckImageUrls}
+              disabled={isCheckingUrls}
+              className="flex items-center gap-2 rounded-lg bg-gray-600 px-6 py-3 font-medium text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+            >
+              {isCheckingUrls ? (
+                <>
+                  <svg
+                    className="h-5 w-5 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Checking...
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                    />
+                  </svg>
+                  Check Status
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleMigrateImageUrls}
+              disabled={isMigrating || !urlStatus || urlStatus.migration_status.is_complete}
+              className="flex items-center gap-2 rounded-lg bg-purple-600 px-6 py-3 font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+            >
+              {isMigrating ? (
+                <>
+                  <svg
+                    className="h-5 w-5 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Migrating...
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
+                  </svg>
+                  Migrate to R2
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* URL Status */}
+        {urlStatus && (
+          <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-zinc-800">
+            <div className="mb-4">
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                Migration Status
+              </h3>
+              {urlStatus.migration_status.is_complete ? (
+                <p className="mt-1 text-sm text-green-600 dark:text-green-400">
+                  ✅ All {urlStatus.total_cards} cards are using R2 URLs
+                </p>
+              ) : (
+                <p className="mt-1 text-sm text-yellow-600 dark:text-yellow-400">
+                  ⚠️ {urlStatus.migration_status.needs_migration} of {urlStatus.total_cards} cards need migration
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-4">
+              <div className="rounded bg-blue-100 p-3 dark:bg-blue-900/30">
+                <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                  R2 URLs
+                </p>
+                <p className="mt-1 text-2xl font-bold text-blue-700 dark:text-blue-300">
+                  {urlStatus.categories.r2_urls}
+                </p>
+              </div>
+              <div className="rounded bg-orange-100 p-3 dark:bg-orange-900/30">
+                <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                  External URLs
+                </p>
+                <p className="mt-1 text-2xl font-bold text-orange-700 dark:text-orange-300">
+                  {urlStatus.categories.external_urls}
+                </p>
+              </div>
+              <div className="rounded bg-purple-100 p-3 dark:bg-purple-900/30">
+                <p className="text-xs font-medium text-purple-600 dark:text-purple-400">
+                  Local Paths
+                </p>
+                <p className="mt-1 text-2xl font-bold text-purple-700 dark:text-purple-300">
+                  {urlStatus.categories.local_paths}
+                </p>
+              </div>
+              <div className="rounded bg-gray-100 p-3 dark:bg-gray-700">
+                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Other
+                </p>
+                <p className="mt-1 text-2xl font-bold text-gray-700 dark:text-gray-300">
+                  {urlStatus.categories.other}
+                </p>
+              </div>
+            </div>
+
+            {urlStatus.sample_urls.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Sample URLs:
+                </p>
+                <div className="mt-2 space-y-1">
+                  {urlStatus.sample_urls.map((sample, idx) => (
+                    <div key={idx} className="text-xs font-mono text-gray-700 dark:text-gray-300">
+                      <span className="font-semibold">{sample.card_id}:</span>{" "}
+                      <span className="truncate">{sample.image_path}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Migration Result */}
+        {migrationResult && (
+          <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-900/20">
+            <div className="flex items-start gap-3">
+              <svg
+                className="h-6 w-6 flex-shrink-0 text-green-600 dark:text-green-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div className="flex-1">
+                <h3 className="font-semibold text-green-800 dark:text-green-300">
+                  Migration Completed
+                </h3>
+                <p className="mt-1 text-sm text-green-700 dark:text-green-400">
+                  {migrationResult.status === "no_changes_needed"
+                    ? "No changes needed - all cards already use R2 URLs"
+                    : `Successfully migrated ${migrationResult.updated_count} cards to R2 storage`}
+                </p>
+
+                {migrationResult.updated_count > 0 && (
+                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded bg-white p-3 dark:bg-zinc-800">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Updated
+                      </p>
+                      <p className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
+                        {migrationResult.updated_count}
+                      </p>
+                    </div>
+                    <div className="rounded bg-white p-3 dark:bg-zinc-800">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Skipped
+                      </p>
+                      <p className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {migrationResult.skipped_count}
+                      </p>
+                    </div>
+                    <div className="rounded bg-white p-3 dark:bg-zinc-800">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Total Cards
+                      </p>
+                      <p className="mt-1 text-2xl font-bold text-gray-600 dark:text-gray-400">
+                        {migrationResult.total_cards}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {migrationResult.updated_cards.length > 0 && (
+                  <div className="mt-3 rounded bg-white p-3 dark:bg-zinc-800">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                      Sample Migrations (first 10):
+                    </p>
+                    <div className="mt-2 space-y-2">
+                      {migrationResult.updated_cards.map((card, idx) => (
+                        <div key={idx} className="text-xs">
+                          <p className="font-semibold text-gray-700 dark:text-gray-300">
+                            {card.card_id}
+                          </p>
+                          <p className="font-mono text-red-600 dark:text-red-400">
+                            - {card.old_path.slice(0, 60)}...
+                          </p>
+                          <p className="font-mono text-green-600 dark:text-green-400">
+                            + {card.new_path.slice(0, 60)}...
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
