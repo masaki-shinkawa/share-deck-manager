@@ -2,11 +2,11 @@
 Card Scraping Service
 
 Refactored from scripts/scrape_cards.py to be reusable from API endpoints.
+Updated to use Cloudflare R2 for image storage instead of local filesystem.
 """
 
 import re
-from datetime import datetime, UTC
-from pathlib import Path
+from datetime import datetime
 from typing import Dict, List
 
 import requests
@@ -15,12 +15,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from app.models.card import Card
+from app.services.r2_storage import get_r2_storage, R2StorageError
 
 
 # Configuration
 CARD_LIST_URL = "https://www.onepiece-cardgame.com/cardlist/"
-IMAGES_DIR = Path(__file__).parent.parent.parent / "card_images"
-IMAGES_DIR.mkdir(exist_ok=True)
 
 
 def fetch_card_list() -> str:
@@ -103,25 +102,39 @@ def parse_cards(html: str) -> List[Dict]:
     return cards
 
 
-def download_image(image_url: str, card_id: str) -> str | None:
-    """Download card image."""
-    image_path = IMAGES_DIR / f"{card_id}.jpg"
+def download_and_upload_image(image_url: str, card_id: str) -> str | None:
+    """
+    Download card image and upload to Cloudflare R2.
 
-    # Skip if already downloaded
-    if image_path.exists():
-        return str(image_path.relative_to(Path(__file__).parent.parent.parent))
+    Args:
+        image_url: URL of the image to download
+        card_id: Card identifier (e.g., "OP01-001")
 
+    Returns:
+        str | None: Public R2 URL of the uploaded image, or None if failed
+    """
     try:
+        # Get R2 storage service
+        r2_storage = get_r2_storage()
+
+        # Check if image already exists in R2
+        if r2_storage.image_exists(card_id):
+            return r2_storage.get_image_url(card_id)
+
+        # Download image to memory
         response = requests.get(image_url, timeout=10)
         response.raise_for_status()
+        image_bytes = response.content
 
-        with open(image_path, "wb") as f:
-            f.write(response.content)
+        # Upload to R2
+        r2_url = r2_storage.upload_image(card_id, image_bytes)
+        return r2_url
 
-        return str(image_path.relative_to(Path(__file__).parent.parent.parent))
-
+    except R2StorageError as e:
+        print(f"R2 storage error for {card_id}: {e}")
+        return None
     except Exception as e:
-        print(f"Error downloading {card_id}: {e}")
+        print(f"Error downloading/uploading {card_id}: {e}")
         return None
 
 
@@ -143,9 +156,9 @@ async def scrape_and_save_cards(session: AsyncSession) -> Dict[str, int]:
     updated_count = 0
 
     for card_data in cards_data:
-        # Download image
-        image_path = download_image(card_data["image_url"], card_data["card_id"])
-        if not image_path:
+        # Download image and upload to R2
+        r2_url = download_and_upload_image(card_data["image_url"], card_data["card_id"])
+        if not r2_url:
             continue
 
         # Check for existing card
@@ -159,8 +172,8 @@ async def scrape_and_save_cards(session: AsyncSession) -> Dict[str, int]:
             existing_card.name = card_data["name"]
             existing_card.color = card_data["color"]
             existing_card.block_icon = card_data["block_icon"]
-            existing_card.image_path = image_path
-            existing_card.updated_at = datetime.now(UTC)
+            existing_card.image_path = r2_url
+            existing_card.updated_at = datetime.utcnow()
             updated_count += 1
         else:
             # Create new card
@@ -169,7 +182,7 @@ async def scrape_and_save_cards(session: AsyncSession) -> Dict[str, int]:
                 name=card_data["name"],
                 color=card_data["color"],
                 block_icon=card_data["block_icon"],
-                image_path=image_path
+                image_path=r2_url
             )
             session.add(card)
             saved_count += 1

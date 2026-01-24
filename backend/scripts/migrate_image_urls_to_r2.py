@@ -29,7 +29,7 @@ from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from app.models.card import Card
-from datetime import datetime, UTC
+from datetime import datetime
 
 
 async def migrate_image_urls():
@@ -83,7 +83,7 @@ async def migrate_image_urls():
 
             # Update card
             card.image_path = new_path
-            card.updated_at = datetime.now(UTC)
+            card.updated_at = datetime.utcnow()
             session.add(card)
 
             print(f"  UPDATE: {card.card_id}")

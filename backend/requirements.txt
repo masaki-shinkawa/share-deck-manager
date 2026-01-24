@@ -49,6 +49,7 @@ sqlmodel
 cachetools
 beautifulsoup4
 lxml
+boto3
 
 # Testing dependencies
 pytest>=7.0.0

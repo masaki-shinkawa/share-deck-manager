@@ -164,7 +164,7 @@ class TestCardScrapingEndpoint:
             "total_cards": 10
         }
 
-        with patch("app.api.v1.endpoints.admin.scrape_and_save_cards") as mock_scrape:
+        with patch("app.services.card_scraper.scrape_and_save_cards") as mock_scrape:
             mock_scrape.return_value = mock_scrape_result
 
             result = await scrape_cards(
@@ -196,7 +196,7 @@ class TestCardScrapingEndpoint:
         mock_background_tasks = MagicMock()
 
         # Mock scraping to raise an exception
-        with patch("app.api.v1.endpoints.admin.scrape_and_save_cards") as mock_scrape:
+        with patch("app.services.card_scraper.scrape_and_save_cards") as mock_scrape:
             mock_scrape.side_effect = Exception("Network error")
 
             result = await scrape_cards(

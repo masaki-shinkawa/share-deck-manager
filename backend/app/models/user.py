@@ -1,12 +1,12 @@
-from datetime import datetime, UTC
+from datetime import datetime
 from typing import Optional
 from sqlmodel import Field, SQLModel
 from uuid import UUID, uuid4
 from app.models.role import UserRole
 
 def get_utc_now() -> datetime:
-    """Get current UTC datetime (timezone-aware)."""
-    return datetime.now(UTC)
+    """Get current UTC datetime (timezone-naive for DB compatibility)."""
+    return datetime.utcnow()
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
