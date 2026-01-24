@@ -116,10 +116,13 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                 >
                   <div className="relative aspect-[2.5/3.5] overflow-hidden rounded">
                     <Image
-                      src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/images/${card.card_id}.jpg`}
+                      src={card.image_path}
                       alt={card.name}
                       fill
+                      sizes="(max-width: 768px) 33vw, 200px"
+                      quality={95}
                       className="object-cover transition-transform group-hover:scale-105"
+                      style={{ imageRendering: 'auto' }}
                       unoptimized
                     />
                   </div>

@@ -102,6 +102,13 @@ export default async function DashboardPage() {
             icon="arrow"
           />
 
+          <DashboardCard
+            title="All Decks"
+            description="View all users' decks grouped by person"
+            href="/all-decks"
+            icon="arrow"
+          />
+
           {userData.role === "admin" && (
             <DashboardCard
               title="Admin Page"

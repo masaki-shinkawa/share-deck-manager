@@ -99,11 +99,13 @@ export default function DeckList({ idToken }: DeckListProps) {
               <div className="flex items-center gap-4">
                 <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded shadow-sm">
                   <Image
-                    src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/images/${deck.leader_card.card_id}.jpg`}
+                    src={deck.leader_card.image_path}
                     alt={deck.leader_card.name}
-                    width={56}
-                    height={80}
+                    width={224}
+                    height={320}
+                    quality={95}
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    style={{ imageRendering: 'auto' }}
                     unoptimized
                   />
                 </div>

@@ -16,7 +16,7 @@ from app.models.role import UserRole
 client = TestClient(app)
 
 
-class TestUsersMe Endpoint:
+class TestUsersMeEndpoint:
     """Test /api/v1/users/me endpoint."""
 
     def test_users_me_returns_user_with_role(self):
