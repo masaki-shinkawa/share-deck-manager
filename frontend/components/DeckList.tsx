@@ -113,9 +113,6 @@ export default function DeckList({ idToken }: DeckListProps) {
                   <h3 className="truncate font-bold text-gray-900 dark:text-white">
                     {deck.name}
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Leader: {deck.leader_card.name}
-                  </p>
                   <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
                     Created: {new Date(deck.created_at).toLocaleDateString()}
                   </p>
