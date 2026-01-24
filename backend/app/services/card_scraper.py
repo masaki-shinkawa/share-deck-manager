@@ -8,6 +8,7 @@ Updated to use Cloudflare R2 for image storage instead of local filesystem.
 import re
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, List
 
 import requests
