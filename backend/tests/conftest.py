@@ -173,14 +173,17 @@ async def test_user_no_nickname(test_session: AsyncSession) -> User:
 
 @pytest_asyncio.fixture
 async def test_card(test_session: AsyncSession) -> Card:
-    """Create a test card."""
+    """Create a test card with R2 URL."""
+    import os
+    r2_public_url = os.getenv("R2_PUBLIC_URL", "https://pub-test.r2.dev")
+
     card = Card(
         id=uuid4(),
         card_id="test-card-001",
         name="Test Card",
         color="red",
         block_icon=1,
-        image_path="/images/test-card.jpg",
+        image_path=f"{r2_public_url}/cards/test-card-001.jpg",
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
     )
