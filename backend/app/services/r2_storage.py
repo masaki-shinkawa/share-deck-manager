@@ -6,10 +6,14 @@ Uses boto3 S3-compatible API.
 """
 
 import os
+import logging
 import boto3
 from typing import Union, Dict, List, Tuple
 from pathlib import Path
 from botocore.exceptions import ClientError
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 
 class R2StorageError(Exception):
@@ -29,6 +33,11 @@ class R2StorageService:
         self.bucket_name = os.getenv("R2_BUCKET_NAME")
         self.public_url = os.getenv("R2_PUBLIC_URL")
 
+        logger.info(f"Initializing R2 storage service...")
+        logger.info(f"Bucket: {self.bucket_name}")
+        logger.info(f"Endpoint: {self.endpoint_url}")
+        logger.info(f"Public URL: {self.public_url}")
+
         # Validate required configuration
         required_vars = {
             "R2_ENDPOINT_URL": self.endpoint_url,
@@ -40,18 +49,23 @@ class R2StorageService:
 
         missing_vars = [name for name, value in required_vars.items() if not value]
         if missing_vars:
-            raise R2StorageError(
-                f"Missing required environment variable(s): {', '.join(missing_vars)}"
-            )
+            error_msg = f"Missing required environment variable(s): {', '.join(missing_vars)}"
+            logger.error(f"❌ {error_msg}")
+            raise R2StorageError(error_msg)
 
         # Initialize S3 client for R2
-        self.s3_client = boto3.client(
-            "s3",
-            endpoint_url=self.endpoint_url,
-            aws_access_key_id=self.access_key_id,
-            aws_secret_access_key=self.secret_access_key,
-            region_name="auto",  # R2 uses "auto" for region
-        )
+        try:
+            self.s3_client = boto3.client(
+                "s3",
+                endpoint_url=self.endpoint_url,
+                aws_access_key_id=self.access_key_id,
+                aws_secret_access_key=self.secret_access_key,
+                region_name="auto",  # R2 uses "auto" for region
+            )
+            logger.info("✅ R2 storage service initialized successfully")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize S3 client: {e}")
+            raise R2StorageError(f"Failed to initialize S3 client: {e}") from e
 
     def upload_image(
         self,
@@ -87,6 +101,8 @@ class R2StorageService:
 
             # Upload to R2
             key = f"cards/{card_id}.jpg"
+            logger.info(f"Uploading to R2: bucket={self.bucket_name}, key={key}, size={len(image_bytes)} bytes")
+
             self.s3_client.put_object(
                 Bucket=self.bucket_name,
                 Key=key,
@@ -94,12 +110,22 @@ class R2StorageService:
                 ContentType=content_type,
             )
 
-            # Return public URL
-            return self.get_image_url(card_id)
+            logger.info(f"✅ Successfully uploaded {key} to R2")
 
+            # Return public URL
+            url = self.get_image_url(card_id)
+            logger.info(f"Generated public URL: {url}")
+            return url
+
+        except ClientError as e:
+            error_code = e.response.get('Error', {}).get('Code', 'Unknown')
+            error_msg = e.response.get('Error', {}).get('Message', str(e))
+            logger.error(f"❌ AWS ClientError uploading {card_id}: {error_code} - {error_msg}")
+            raise R2StorageError(f"Failed to upload image to R2 (AWS Error {error_code}): {error_msg}") from e
         except Exception as e:
             if isinstance(e, R2StorageError):
                 raise
+            logger.error(f"❌ Unexpected error uploading {card_id}: {e}", exc_info=True)
             raise R2StorageError(f"Failed to upload image to R2: {str(e)}") from e
 
     def delete_image(self, card_id: str) -> None:

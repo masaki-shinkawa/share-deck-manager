@@ -6,6 +6,7 @@ Updated to use Cloudflare R2 for image storage instead of local filesystem.
 """
 
 import re
+import logging
 from datetime import datetime
 from typing import Dict, List
 
@@ -16,6 +17,9 @@ from sqlmodel import select
 
 from app.models.card import Card
 from app.services.r2_storage import get_r2_storage, R2StorageError
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 
 # Configuration
@@ -115,25 +119,37 @@ def download_and_upload_image(image_url: str, card_id: str) -> str | None:
     """
     try:
         # Get R2 storage service
+        logger.info(f"Processing image for {card_id} from {image_url}")
         r2_storage = get_r2_storage()
 
         # Check if image already exists in R2
         if r2_storage.image_exists(card_id):
+            logger.info(f"✅ Image already exists in R2: {card_id}")
             return r2_storage.get_image_url(card_id)
 
         # Download image to memory
+        logger.info(f"Downloading image for {card_id}...")
         response = requests.get(image_url, timeout=10)
         response.raise_for_status()
         image_bytes = response.content
+        logger.info(f"Downloaded {len(image_bytes)} bytes for {card_id}")
 
         # Upload to R2
+        logger.info(f"Uploading {card_id} to R2...")
         r2_url = r2_storage.upload_image(card_id, image_bytes)
+        logger.info(f"✅ Upload successful: {card_id} -> {r2_url}")
         return r2_url
 
     except R2StorageError as e:
+        logger.error(f"❌ R2 storage error for {card_id}: {e}")
         print(f"R2 storage error for {card_id}: {e}")
         return None
+    except requests.RequestException as e:
+        logger.error(f"❌ Network error downloading {card_id} from {image_url}: {e}")
+        print(f"Network error downloading {card_id}: {e}")
+        return None
     except Exception as e:
+        logger.error(f"❌ Unexpected error for {card_id}: {e}", exc_info=True)
         print(f"Error downloading/uploading {card_id}: {e}")
         return None
 
