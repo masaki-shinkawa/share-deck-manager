@@ -30,19 +30,30 @@ railway run pg_dump > backup_$(date +%Y%m%d_%H%M%S).sql
 
 ### 2. マイグレーションスクリプト実行
 
-#### ドライラン（確認のみ）
+#### 事前確認
 
 ```bash
-# スクリプトのコードを確認
-cat scripts/migrate_image_urls_to_r2.py
+# 現在の状態を確認
+railway shell
+python scripts/check_image_urls.py
+exit
 ```
 
 #### 本番実行
 
 ```bash
-# Railwayで実行
-railway run python scripts/migrate_image_urls_to_r2.py
+# Railwayシェルに入ってスクリプトを実行
+railway shell
+
+# シェル内で実行
+python scripts/migrate_image_urls_to_r2.py
+
+# 完了後、終了
+exit
 ```
+
+**注意:** `railway run`ではなく`railway shell`を使用してください。
+`railway run`はローカルで実行されるため、Railway内部のデータベースにアクセスできません。
 
 ### 3. 結果確認
 

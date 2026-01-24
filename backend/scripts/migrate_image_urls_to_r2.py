@@ -16,20 +16,32 @@ import asyncio
 import os
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables only if not already set (for local development)
+if not os.getenv("DATABASE_URL"):
+    load_dotenv()
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlmodel import select
-from app.db.session import async_session_maker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 from app.models.card import Card
 from datetime import datetime, UTC
 
 
 async def migrate_image_urls():
     """Migrate all card image URLs to R2 format."""
-    # Get R2 public URL from environment
+    # Get environment variables
+    database_url = os.getenv("DATABASE_URL")
     r2_public_url = os.getenv("R2_PUBLIC_URL")
+
+    if not database_url:
+        print("ERROR: DATABASE_URL environment variable not set")
+        return False
+
     if not r2_public_url:
         print("ERROR: R2_PUBLIC_URL environment variable not set")
         return False
@@ -37,7 +49,17 @@ async def migrate_image_urls():
     print(f"Starting image URL migration to R2...")
     print(f"R2 Public URL: {r2_public_url}")
 
-    async with async_session_maker() as session:
+    # Convert DATABASE_URL to async driver format
+    if database_url.startswith("postgresql://"):
+        database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+    # Create engine and session
+    engine = create_async_engine(database_url, echo=False)
+    async_session = sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
+
+    async with async_session() as session:
         # Fetch all cards
         result = await session.execute(select(Card))
         cards = result.scalars().all()

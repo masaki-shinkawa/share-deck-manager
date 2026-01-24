@@ -6,14 +6,21 @@ This script shows a summary of image URL formats currently in use.
 
 import asyncio
 import sys
+import os
 from pathlib import Path
 from collections import Counter
+from dotenv import load_dotenv
+
+# Load environment variables only if not already set (for local development)
+if not os.getenv("DATABASE_URL"):
+    load_dotenv()
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlmodel import select
-from app.db.session import async_session_maker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 from app.models.card import Card
 
 
@@ -21,7 +28,32 @@ async def check_image_urls():
     """Check and report on current image URL formats."""
     print("Checking image URLs in database...\n")
 
-    async with async_session_maker() as session:
+    # Get DATABASE_URL and create engine
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        print("ERROR: DATABASE_URL environment variable not set")
+        return
+
+    # Debug: Show partial DATABASE_URL
+    if database_url:
+        parts = database_url.split("@")
+        if len(parts) > 1:
+            print(f"Connecting to: ...@{parts[-1][:50]}...")
+        else:
+            print(f"DATABASE_URL format unexpected")
+
+    # Convert to async driver format
+    if database_url.startswith("postgresql://"):
+        database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+    engine = create_async_engine(database_url, echo=False)
+
+    # Create session
+    async_session = sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
+
+    async with async_session() as session:
         # Fetch all cards
         result = await session.execute(select(Card))
         cards = result.scalars().all()
@@ -61,13 +93,12 @@ async def check_image_urls():
             print(f"{category:30s}: {count:4d} ({percentage:5.1f}%)")
 
         print("\n=== Sample URLs ===")
-        # Show 5 sample URLs from each category
-        async with async_session_maker() as session:
-            result = await session.execute(select(Card).limit(5))
-            sample_cards = result.scalars().all()
+        # Show 5 sample URLs (reusing session from above)
+        result = await session.execute(select(Card).limit(5))
+        sample_cards = result.scalars().all()
 
-            for card in sample_cards:
-                print(f"{card.card_id:15s}: {card.image_path[:70]}{'...' if len(card.image_path) > 70 else ''}")
+        for card in sample_cards:
+            print(f"{card.card_id:15s}: {card.image_path[:70]}{'...' if len(card.image_path) > 70 else ''}")
 
         # Migration recommendation
         print("\n=== Migration Status ===")
