@@ -21,6 +21,8 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
   const [cards, setCards] = useState<Card[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
 
   useEffect(() => {
     if (isOpen && cards.length === 0) {
@@ -44,6 +46,18 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
     }
   };
 
+  // Filter cards based on search query and color
+  const filteredCards = cards.filter((card) => {
+    const matchesSearch =
+      searchQuery === "" ||
+      card.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesColor = selectedColor === "" || card.color === selectedColor;
+    return matchesSearch && matchesColor;
+  });
+
+  // Get unique colors from all cards
+  const uniqueColors = Array.from(new Set(cards.map((card) => card.color))).sort();
+
   const handleSubmit = async () => {
     const selectedCard = cards.find((c) => c.id === selectedCardId);
     if (!selectedCard) return;
@@ -57,7 +71,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${idToken}`,
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           name: deckName,
           leader_card_id: selectedCardId
         }),
@@ -66,6 +80,8 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
       if (response.ok) {
         setIsOpen(false);
         setSelectedCardId(null);
+        setSearchQuery("");
+        setSelectedColor("");
         onDeckCreated();
       } else {
         console.error("Failed to create deck");
@@ -102,40 +118,74 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                 </svg>
               </button>
             </div>
-            
-            <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto pr-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {cards.map((card) => (
-                <div
-                  key={card.id}
-                  onClick={() => setSelectedCardId(card.id)}
-                  className={`group relative cursor-pointer rounded-lg border-2 p-1 transition-all ${
-                    selectedCardId === card.id
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                      : "border-transparent bg-gray-50 hover:border-gray-300 dark:bg-zinc-800 dark:hover:border-gray-600"
-                  }`}
+
+            {/* Search and Filter */}
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder="Search cards..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
+                />
+              </div>
+              <div className="sm:w-48">
+                <select
+                  aria-label="Color filter"
+                  value={selectedColor}
+                  onChange={(e) => setSelectedColor(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
                 >
-                  <div className="relative aspect-[2.5/3.5] overflow-hidden rounded">
-                    <Image
-                      src={card.image_path}
-                      alt={card.name}
-                      fill
-                      sizes="(max-width: 768px) 33vw, 200px"
-                      quality={95}
-                      className="object-cover transition-transform group-hover:scale-105"
-                      style={{ imageRendering: 'auto' }}
-                      unoptimized
-                    />
-                  </div>
-                  <div className="mt-2 text-center">
-                    <p className="line-clamp-1 text-xs font-bold leading-tight dark:text-white">
-                      {card.name}
-                    </p>
-                    <p className="text-[10px] text-gray-500 dark:text-gray-400">
-                      {card.color}
-                    </p>
-                  </div>
+                  <option value="">All Colors</option>
+                  {uniqueColors.map((color) => (
+                    <option key={color} value={color}>
+                      {color}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto pr-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {filteredCards.length === 0 ? (
+                <div className="col-span-full py-12 text-center text-gray-500 dark:text-gray-400">
+                  No cards found
                 </div>
-              ))}
+              ) : (
+                filteredCards.map((card) => (
+                  <div
+                    key={card.id}
+                    onClick={() => setSelectedCardId(card.id)}
+                    className={`group relative cursor-pointer rounded-lg border-2 p-1 transition-all ${
+                      selectedCardId === card.id
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                        : "border-transparent bg-gray-50 hover:border-gray-300 dark:bg-zinc-800 dark:hover:border-gray-600"
+                    }`}
+                  >
+                    <div className="relative aspect-[2.5/3.5] overflow-hidden rounded">
+                      <Image
+                        src={card.image_path}
+                        alt={card.name}
+                        fill
+                        sizes="(max-width: 768px) 33vw, 200px"
+                        quality={95}
+                        className="object-cover transition-transform group-hover:scale-105"
+                        style={{ imageRendering: 'auto' }}
+                        unoptimized
+                      />
+                    </div>
+                    <div className="mt-2 text-center">
+                      <p className="line-clamp-1 text-xs font-bold leading-tight dark:text-white">
+                        {card.name}
+                      </p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                        {card.color}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
             <div className="mt-6 flex justify-end gap-3 border-t pt-4 dark:border-gray-800">
