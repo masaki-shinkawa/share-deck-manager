@@ -8,18 +8,12 @@ name = "backend"
 source = "backend"
 
 [services.build]
-builder = "nixpacks"
-buildCommand = "pip install -r requirements.txt"
+builder = "dockerfile"
+dockerfilePath = "Dockerfile.production"
 
 [services.deploy]
-startCommand = "sh -c 'alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT'"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
-
-[[services.healthcheck]]
-path = "/"
-interval = 300
-timeout = 100
 
 # Frontend Service (Next.js)
 [[services]]
@@ -27,14 +21,9 @@ name = "frontend"
 source = "frontend"
 
 [services.build]
-builder = "nixpacks"
+builder = "dockerfile"
+dockerfilePath = "Dockerfile.production"
 
 [services.deploy]
-startCommand = "npm run start"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
-
-[[services.healthcheck]]
-path = "/"
-interval = 300
-timeout = 100
