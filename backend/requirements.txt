@@ -50,6 +50,7 @@ cachetools
 beautifulsoup4
 lxml
 boto3
+gunicorn
 
 # Testing dependencies
 pytest>=7.0.0
