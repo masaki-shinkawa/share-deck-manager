@@ -1,9 +1,29 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from app.api.v1.api import api_router
+from app.core.security import validate_security_config
 import os
+import logging
 
-app = FastAPI(title="Share Deck Manager")
+logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan handler for startup/shutdown events."""
+    # Startup
+    logger.info("Starting Share Deck Manager backend...")
+    try:
+        validate_security_config()
+        logger.info("Security configuration validated successfully")
+    except RuntimeError as e:
+        logger.error(f"Configuration error: {e}")
+        raise
+    yield
+    # Shutdown
+    logger.info("Shutting down Share Deck Manager backend...")
+
+app = FastAPI(title="Share Deck Manager", lifespan=lifespan)
 
 # Note: Image serving removed - now using Cloudflare R2 storage
 # Images are served directly from R2 bucket public URL

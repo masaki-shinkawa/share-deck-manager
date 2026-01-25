@@ -16,6 +16,19 @@ NEXTAUTH_SECRET = os.getenv("NEXTAUTH_SECRET")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs"
 
+def validate_security_config():
+    """Validate required security environment variables at startup."""
+    missing = []
+    if not GOOGLE_CLIENT_ID:
+        missing.append("GOOGLE_CLIENT_ID")
+    if not NEXTAUTH_SECRET:
+        missing.append("NEXTAUTH_SECRET")
+    if missing:
+        raise RuntimeError(
+            f"Missing required environment variables: {', '.join(missing)}. "
+            "Please configure them in Railway dashboard or .env file."
+        )
+
 # Cache for Google public keys with 1-hour TTL
 # maxsize=10: We don't expect more than a few key IDs
 # ttl=3600: 1 hour cache duration

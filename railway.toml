@@ -19,7 +19,7 @@ restartPolicyMaxRetries = 10
 [[services.healthcheck]]
 path = "/"
 interval = 300
-timeout = 100
+timeout = 180
 
 # Frontend Service (Next.js)
 [[services]]
@@ -37,4 +37,4 @@ restartPolicyMaxRetries = 10
 [[services.healthcheck]]
 path = "/"
 interval = 300
-timeout = 100
+timeout = 180
