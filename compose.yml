@@ -17,6 +17,13 @@ services:
       retries: 5
     restart: unless-stopped
 
+  adminer:
+    image: adminer
+    container_name: deck-manager-adminer
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
   backend:
     build:
       context: ./backend
