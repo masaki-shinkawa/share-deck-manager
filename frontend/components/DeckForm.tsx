@@ -187,7 +187,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
           onClick={() => setIsOpen(true)}
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none dark:bg-blue-500 dark:hover:bg-blue-600"
         >
-          New Deck
+          デッキ作成
         </button>
       </div>
 
@@ -195,7 +195,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 backdrop-blur-sm">
           <div className="flex max-h-[90vh] w-full max-w-4xl flex-col rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold dark:text-white">Select Leader Card</h2>
+              <h2 className="text-xl font-bold dark:text-white">リーダーカードを選択</h2>
               <button
                 onClick={handleClose}
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -212,7 +212,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                 <div>
                   <input
                     type="text"
-                    placeholder="Card name"
+                    placeholder="カード名"
                     value={manualName}
                     onChange={(e) => setManualName(e.target.value)}
                     className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
@@ -220,7 +220,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                 </div>
                 <div>
                   <label htmlFor="manual-color1-input" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Color 1 <span className="text-red-500">*</span>
+                    色1 <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="manual-color1-input"
@@ -229,7 +229,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                     onChange={(e) => setManualColor1(e.target.value)}
                     className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
                   >
-                    <option value="">Select color 1</option>
+                    <option value="">色1を選択</option>
                     {colors.map((color) => (
                       <option key={color} value={color}>
                         {color}
@@ -239,7 +239,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                 </div>
                 <div>
                   <label htmlFor="manual-color2-input" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Color 2 <span className="text-xs text-gray-500">(Optional)</span>
+                    色2 <span className="text-xs text-gray-500">(任意)</span>
                   </label>
                   <select
                     id="manual-color2-input"
@@ -248,7 +248,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                     onChange={(e) => setManualColor2(e.target.value)}
                     className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
                   >
-                    <option value="">--- (None)</option>
+                    <option value="">--- (なし)</option>
                     {colors
                       .filter((color) => color !== manualColor1)
                       .map((color) => (
@@ -263,7 +263,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                     onClick={() => setShowManualInput(false)}
                     className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-zinc-800"
                   >
-                    Back
+                    戻る
                   </button>
                   <button
                     data-testid="manual-create-button"
@@ -283,7 +283,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                   <div className="flex-1">
                     <input
                       type="text"
-                      placeholder="Search cards..."
+                      placeholder="カードを検索..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
@@ -296,7 +296,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                       onChange={(e) => setSelectedColor(e.target.value)}
                       className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
                     >
-                      <option value="">All Colors</option>
+                      <option value="">全ての色</option>
                       {colors.map((color) => (
                         <option key={color} value={color}>
                           {color}
@@ -318,14 +318,14 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                         <svg className="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
-                        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Manual Input</p>
+                        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">手入力</p>
                       </div>
                     </div>
                   </div>
 
                   {filteredCards.length === 0 ? (
                     <div className="col-span-full py-12 text-center text-gray-500 dark:text-gray-400">
-                      No cards found
+                      カードが見つかりません
                     </div>
                   ) : (
                     filteredCards.map((card) => (
@@ -382,7 +382,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                     onClick={handleClose}
                     className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-zinc-800"
                   >
-                    Cancel
+                    キャンセル
                   </button>
                   <button
                     onClick={handleSubmit}

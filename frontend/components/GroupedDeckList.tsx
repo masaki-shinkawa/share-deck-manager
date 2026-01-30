@@ -90,11 +90,11 @@ export default function GroupedDeckList({ idToken, users: propUsers, decks: prop
   }, [idToken, propDecks]);
 
   if (isLoading) {
-    return <div className="text-center text-gray-500 dark:text-gray-400">Loading...</div>;
+    return <div className="text-center text-gray-500 dark:text-gray-400">読み込み中...</div>;
   }
 
   if (!propDecks && !fetchedData) {
-    return <div className="text-center text-gray-500 dark:text-gray-400">Failed to load decks.</div>;
+    return <div className="text-center text-gray-500 dark:text-gray-400">デッキの読み込みに失敗しました。</div>;
   }
 
   // Filter decks by selected user and search query
@@ -115,7 +115,7 @@ export default function GroupedDeckList({ idToken, users: propUsers, decks: prop
       <div className="flex items-center gap-4">
         <input
           type="text"
-          placeholder="Search decks..."
+          placeholder="デッキを検索..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
@@ -164,7 +164,7 @@ export default function GroupedDeckList({ idToken, users: propUsers, decks: prop
       {/* Deck Grid */}
       {filteredDecks.length === 0 ? (
         <p className="text-center text-gray-500 dark:text-gray-400">
-          No decks found{selectedUserId ? " for this user" : ""}.
+          デッキが見つかりません{selectedUserId ? "（選択されたユーザー）" : ""}。
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
