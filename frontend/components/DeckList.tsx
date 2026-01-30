@@ -82,7 +82,7 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
     }
 
     if (!idToken) return;
-    if (!confirm("Are you sure you want to delete this deck?")) return;
+    if (!confirm("本当にこのデッキを削除しますか？")) return;
 
     try {
       const response = await fetch(
@@ -141,7 +141,7 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
   };
 
   if (isLoading) {
-    return <div className="text-center text-gray-500">Loading...</div>;
+    return <div className="text-center text-gray-500">読み込み中...</div>;
   }
 
   return (
@@ -150,7 +150,7 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
 
       {decks.length === 0 ? (
         <p className="text-center text-gray-500 dark:text-gray-400">
-          No decks yet. Create your first deck above!
+          デッキがまだありません。上で最初のデッキを作成しましょう！
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -197,7 +197,7 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
                     {deck.name}
                   </h3>
                   <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
-                    Created: {new Date(deck.created_at).toLocaleDateString()}
+                    作成日: {new Date(deck.created_at).toLocaleDateString()}
                   </p>
                 </div>
               </div>

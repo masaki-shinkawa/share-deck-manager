@@ -86,7 +86,7 @@ export default async function DashboardPage() {
       <div className="mx-auto max-w-5xl">
         {/* Header */}
         <div className="mb-12 flex items-center justify-between">
-          <h1 className="text-4xl font-bold text-white">Dashboard</h1>
+          <h1 className="text-4xl font-bold text-white">ダッシュボード</h1>
           <SignOutButton />
         </div>
 
@@ -97,22 +97,22 @@ export default async function DashboardPage() {
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
           <DashboardCard
             title="My Decks"
-            description="Manage your deck collection"
+            description="自分のデッキコレクションを管理"
             href="/decks"
             icon="arrow"
           />
 
           <DashboardCard
             title="All Decks"
-            description="View all users' decks grouped by person"
+            description="みんなのデッキを見る"
             href="/all-decks"
             icon="arrow"
           />
 
           {userData.role === "admin" && (
             <DashboardCard
-              title="Admin Page"
-              description="Administrator tools and operations"
+              title="管理者ページ"
+              description="管理者用ツール・操作"
               href="/admin"
               icon="arrow"
             />
@@ -120,7 +120,7 @@ export default async function DashboardPage() {
 
           <DashboardCard
             title="Coming Soon"
-            description="More features in development"
+            description="新機能開発中"
             icon="lock"
             disabled
           />

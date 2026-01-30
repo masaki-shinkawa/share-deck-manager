@@ -82,13 +82,13 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
         setStats(data);
         setError(null);
       } else if (response.status === 403) {
-        setError("Access denied. Admin privileges required.");
+        setError("アクセスが拒否されました。管理者権限が必要です。");
       } else {
-        setError("Failed to fetch admin statistics.");
+        setError("統計情報の取得に失敗しました。");
       }
     } catch (err) {
       console.error("Error fetching stats:", err);
-      setError("Network error. Could not fetch statistics.");
+      setError("ネットワークエラー。統計情報を取得できませんでした。");
     } finally {
       setIsLoadingStats(false);
     }
@@ -114,13 +114,13 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
         // Refresh stats after successful scraping
         fetchStats();
       } else if (response.status === 403) {
-        setError("Access denied. Admin privileges required.");
+        setError("アクセスが拒否されました。管理者権限が必要です。");
       } else {
         setScrapeResult(data);
       }
     } catch (err) {
       console.error("Error scraping cards:", err);
-      setError("Network error. Could not perform card scraping.");
+      setError("ネットワークエラー。カードのスクレイピングを実行できませんでした。");
     } finally {
       setIsScraping(false);
     }
@@ -143,13 +143,13 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
       if (response.ok) {
         setUrlStatus(data);
       } else if (response.status === 403) {
-        setError("Access denied. Admin privileges required.");
+        setError("アクセスが拒否されました。管理者権限が必要です。");
       } else {
-        setError("Failed to check image URLs.");
+        setError("画像URLの確認に失敗しました。");
       }
     } catch (err) {
       console.error("Error checking image URLs:", err);
-      setError("Network error. Could not check image URLs.");
+      setError("ネットワークエラー。画像URLを確認できませんでした。");
     } finally {
       setIsCheckingUrls(false);
     }
@@ -175,13 +175,13 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
         // Refresh URL status after migration
         await handleCheckImageUrls();
       } else if (response.status === 403) {
-        setError("Access denied. Admin privileges required.");
+        setError("アクセスが拒否されました。管理者権限が必要です。");
       } else {
-        setError(data.detail || "Failed to migrate image URLs.");
+        setError(data.detail || "画像URLの移行に失敗しました。");
       }
     } catch (err) {
       console.error("Error migrating image URLs:", err);
-      setError("Network error. Could not perform migration.");
+      setError("ネットワークエラー。移行を実行できませんでした。");
     } finally {
       setIsMigrating(false);
     }
@@ -210,7 +210,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
           </svg>
           <div>
             <h3 className="font-semibold text-red-800 dark:text-red-300">
-              Access Denied
+              アクセス拒否
             </h3>
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
@@ -223,14 +223,14 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
     <div className="space-y-8">
       {/* Stats Section */}
       {isLoadingStats ? (
-        <div className="text-center text-gray-500">Loading statistics...</div>
+        <div className="text-center text-gray-500">統計情報を読み込み中...</div>
       ) : stats ? (
         <div className="grid gap-6 sm:grid-cols-3">
           <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6 dark:border-gray-700 dark:from-blue-900/20 dark:to-blue-800/20">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                  Total Cards
+                  総カード数
                 </p>
                 <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
                   {stats.total_cards}
@@ -256,7 +256,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-purple-600 dark:text-purple-400">
-                  Total Decks
+                  総デッキ数
                 </p>
                 <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
                   {stats.total_decks}
@@ -282,7 +282,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                  Total Users
+                  総ユーザー数
                 </p>
                 <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
                   {stats.total_users}
@@ -311,11 +311,10 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              Card Master Data Management
+              カードマスターデータ管理
             </h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Scrape and update leader card data from the official One Piece Card
-              Game website
+              公式サイトからリーダーカードデータを取得・更新
             </p>
           </div>
           <button
@@ -344,7 +343,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                Scraping...
+                スクレイピング中...
               </>
             ) : (
               <>
@@ -361,7 +360,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                Scrape Cards
+                カードを取得
               </>
             )}
           </button>
@@ -370,11 +369,10 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
         {/* Scrape Result */}
         {scrapeResult && (
           <div
-            className={`mt-6 rounded-lg border p-4 ${
-              scrapeResult.status === "success"
-                ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-900/20"
-                : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/20"
-            }`}
+            className={`mt-6 rounded-lg border p-4 ${scrapeResult.status === "success"
+              ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-900/20"
+              : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/20"
+              }`}
           >
             <div className="flex items-start gap-3">
               {scrapeResult.status === "success" ? (
@@ -408,22 +406,20 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
               )}
               <div className="flex-1">
                 <h3
-                  className={`font-semibold ${
-                    scrapeResult.status === "success"
-                      ? "text-green-800 dark:text-green-300"
-                      : "text-red-800 dark:text-red-300"
-                  }`}
+                  className={`font-semibold ${scrapeResult.status === "success"
+                    ? "text-green-800 dark:text-green-300"
+                    : "text-red-800 dark:text-red-300"
+                    }`}
                 >
                   {scrapeResult.status === "success"
-                    ? "Scraping Completed"
-                    : "Scraping Failed"}
+                    ? "取得完了"
+                    : "取得失敗"}
                 </h3>
                 <p
-                  className={`mt-1 text-sm ${
-                    scrapeResult.status === "success"
-                      ? "text-green-700 dark:text-green-400"
-                      : "text-red-700 dark:text-red-400"
-                  }`}
+                  className={`mt-1 text-sm ${scrapeResult.status === "success"
+                    ? "text-green-700 dark:text-green-400"
+                    : "text-red-700 dark:text-red-400"
+                    }`}
                 >
                   {scrapeResult.message}
                 </p>
@@ -431,7 +427,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
                   <div className="mt-3 grid gap-3 sm:grid-cols-3">
                     <div className="rounded bg-white p-3 dark:bg-zinc-800">
                       <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                        New Cards
+                        新規カード
                       </p>
                       <p className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
                         {scrapeResult.new_cards}
@@ -439,7 +435,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
                     </div>
                     <div className="rounded bg-white p-3 dark:bg-zinc-800">
                       <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                        Updated Cards
+                        更新カード
                       </p>
                       <p className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {scrapeResult.updated_cards}
@@ -447,7 +443,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
                     </div>
                     <div className="rounded bg-white p-3 dark:bg-zinc-800">
                       <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                        Total Processed
+                        総処理数
                       </p>
                       <p className="mt-1 text-2xl font-bold text-gray-600 dark:text-gray-400">
                         {scrapeResult.total_cards}
@@ -490,7 +486,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
               </svg>
               <div>
                 <h3 className="font-semibold text-red-800 dark:text-red-300">
-                  Error
+                  エラー
                 </h3>
                 <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
               </div>
@@ -504,10 +500,10 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              Image URL Migration to Cloudflare R2
+              Cloudflare R2への画像URL移行
             </h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Check and migrate card image URLs from external/local paths to Cloudflare R2 storage
+              外部/ローカルパスの画像URLをチェックし、Cloudflare R2へ移行
             </p>
           </div>
           <div className="flex gap-3">
@@ -537,7 +533,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  Checking...
+                  確認中...
                 </>
               ) : (
                 <>
@@ -554,7 +550,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
                       d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
                     />
                   </svg>
-                  Check Status
+                  ステータス確認
                 </>
               )}
             </button>
@@ -584,7 +580,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  Migrating...
+                  移行中...
                 </>
               ) : (
                 <>
@@ -601,7 +597,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
                       d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                     />
                   </svg>
-                  Migrate to R2
+                  R2へ移行
                 </>
               )}
             </button>
@@ -613,15 +609,15 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
           <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-zinc-800">
             <div className="mb-4">
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                Migration Status
+                移行ステータス
               </h3>
               {urlStatus.migration_status.is_complete ? (
                 <p className="mt-1 text-sm text-green-600 dark:text-green-400">
-                  ✅ All {urlStatus.total_cards} cards are using R2 URLs
+                  ✅ 全 {urlStatus.total_cards} 枚のカードがR2のURLを使用しています
                 </p>
               ) : (
                 <p className="mt-1 text-sm text-yellow-600 dark:text-yellow-400">
-                  ⚠️ {urlStatus.migration_status.needs_migration} of {urlStatus.total_cards} cards need migration
+                  ⚠️ {urlStatus.total_cards} 枚中 {urlStatus.migration_status.needs_migration} 枚のカードが移行が必要です
                 </p>
               )}
             </div>
@@ -629,7 +625,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
             <div className="grid gap-3 sm:grid-cols-4">
               <div className="rounded bg-blue-100 p-3 dark:bg-blue-900/30">
                 <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                  R2 URLs
+                  R2 URL
                 </p>
                 <p className="mt-1 text-2xl font-bold text-blue-700 dark:text-blue-300">
                   {urlStatus.categories.r2_urls}
@@ -637,7 +633,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
               </div>
               <div className="rounded bg-orange-100 p-3 dark:bg-orange-900/30">
                 <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
-                  External URLs
+                  外部 URL
                 </p>
                 <p className="mt-1 text-2xl font-bold text-orange-700 dark:text-orange-300">
                   {urlStatus.categories.external_urls}
@@ -645,7 +641,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
               </div>
               <div className="rounded bg-purple-100 p-3 dark:bg-purple-900/30">
                 <p className="text-xs font-medium text-purple-600 dark:text-purple-400">
-                  Local Paths
+                  ローカルパス
                 </p>
                 <p className="mt-1 text-2xl font-bold text-purple-700 dark:text-purple-300">
                   {urlStatus.categories.local_paths}
@@ -653,7 +649,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
               </div>
               <div className="rounded bg-gray-100 p-3 dark:bg-gray-700">
                 <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                  Other
+                  その他
                 </p>
                 <p className="mt-1 text-2xl font-bold text-gray-700 dark:text-gray-300">
                   {urlStatus.categories.other}
@@ -664,7 +660,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
             {urlStatus.sample_urls.length > 0 && (
               <div className="mt-4">
                 <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                  Sample URLs:
+                  URLサンプル:
                 </p>
                 <div className="mt-2 space-y-1">
                   {urlStatus.sample_urls.map((sample, idx) => (
@@ -698,19 +694,19 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
               </svg>
               <div className="flex-1">
                 <h3 className="font-semibold text-green-800 dark:text-green-300">
-                  Migration Completed
+                  移行完了
                 </h3>
                 <p className="mt-1 text-sm text-green-700 dark:text-green-400">
                   {migrationResult.status === "no_changes_needed"
-                    ? "No changes needed - all cards already use R2 URLs"
-                    : `Successfully migrated ${migrationResult.updated_count} cards to R2 storage`}
+                    ? "変更不要 - 全てのカードが既にR2のURLを使用しています"
+                    : `{migrationResult.updated_count} 枚のカードをR2へ移行しました`}
                 </p>
 
                 {migrationResult.updated_count > 0 && (
                   <div className="mt-3 grid gap-3 sm:grid-cols-3">
                     <div className="rounded bg-white p-3 dark:bg-zinc-800">
                       <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                        Updated
+                        更新済み
                       </p>
                       <p className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
                         {migrationResult.updated_count}
@@ -718,7 +714,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
                     </div>
                     <div className="rounded bg-white p-3 dark:bg-zinc-800">
                       <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                        Skipped
+                        スキップ
                       </p>
                       <p className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {migrationResult.skipped_count}
@@ -726,7 +722,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
                     </div>
                     <div className="rounded bg-white p-3 dark:bg-zinc-800">
                       <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                        Total Cards
+                        総カード数
                       </p>
                       <p className="mt-1 text-2xl font-bold text-gray-600 dark:text-gray-400">
                         {migrationResult.total_cards}
@@ -738,7 +734,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
                 {migrationResult.updated_cards.length > 0 && (
                   <div className="mt-3 rounded bg-white p-3 dark:bg-zinc-800">
                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                      Sample Migrations (first 10):
+                      移行サンプル (最初の10件):
                     </p>
                     <div className="mt-2 space-y-2">
                       {migrationResult.updated_cards.map((card, idx) => (

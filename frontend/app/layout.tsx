@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Share Deck Manager",
-  description: "Manage and share your trading card game decks.",
+  description: "トレーディングカードゲームのデッキを管理・共有。",
 };
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <body className={inter.className}>
         <Providers>{children}</Providers>
       </body>
