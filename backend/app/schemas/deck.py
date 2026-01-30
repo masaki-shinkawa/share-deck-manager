@@ -4,6 +4,7 @@ from datetime import datetime
 import uuid
 from pydantic import field_validator, model_validator
 
+from app.models.deck import DeckStatus
 from app.schemas.card import CardPublic
 from app.schemas.custom_card import CustomCardPublic
 
@@ -15,6 +16,7 @@ class DeckCreate(SQLModel):
     )
     leader_card_id: Optional[uuid.UUID] = None
     custom_card_id: Optional[uuid.UUID] = None
+    status: DeckStatus = DeckStatus.BUILT
 
     @field_validator('name')
     @classmethod
@@ -35,20 +37,8 @@ class DeckCreate(SQLModel):
         return self
 
 class DeckUpdate(SQLModel):
-    name: str = Field(
-        min_length=1,
-        max_length=100,
-        description="Deck name (1-100 characters)"
-    )
-
-    @field_validator('name')
-    @classmethod
-    def validate_name(cls, v: str) -> str:
-        """Trim whitespace and reject whitespace-only values"""
-        v = v.strip()
-        if not v:
-            raise ValueError('Deck name cannot be empty or whitespace-only')
-        return v
+    """デッキステータス更新用スキーマ"""
+    status: DeckStatus
 
 class DeckPublic(SQLModel):
     id: uuid.UUID
@@ -57,5 +47,6 @@ class DeckPublic(SQLModel):
     custom_card_id: Optional[uuid.UUID] = None
     leader_card: Optional[CardPublic] = None
     custom_card: Optional[CustomCardPublic] = None
+    status: DeckStatus
     created_at: datetime
     updated_at: datetime
