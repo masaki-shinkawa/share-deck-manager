@@ -43,8 +43,19 @@ def upgrade() -> None:
     op.create_index(op.f('ix_decks_custom_card_id'), 'decks', ['custom_card_id'], unique=False)
     op.create_foreign_key('fk_decks_custom_card_id', 'decks', 'custom_cards', ['custom_card_id'], ['id'])
 
+    # Add CHECK constraint to ensure exactly one card type is set
+    op.create_check_constraint(
+        'ck_decks_one_card_type',
+        'decks',
+        '(leader_card_id IS NOT NULL AND custom_card_id IS NULL) OR '
+        '(leader_card_id IS NULL AND custom_card_id IS NOT NULL)'
+    )
+
 
 def downgrade() -> None:
+    # Remove CHECK constraint
+    op.drop_constraint('ck_decks_one_card_type', 'decks', type_='check')
+
     # Remove custom_card_id from decks
     op.drop_constraint('fk_decks_custom_card_id', 'decks', type_='foreignkey')
     op.drop_index(op.f('ix_decks_custom_card_id'), table_name='decks')

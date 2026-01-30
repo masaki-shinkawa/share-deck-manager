@@ -29,6 +29,9 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
   const [manualName, setManualName] = useState("");
   const [manualColor, setManualColor] = useState("");
 
+  // Error state
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     if (isOpen && cards.length === 0) {
       fetchCards();
@@ -45,9 +48,11 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
       if (response.ok) {
         const data = await response.json();
         setCards(data);
+      } else {
+        setError("カードの読み込みに失敗しました。");
       }
     } catch (error) {
-      console.error("Error fetching cards:", error);
+      setError("カードの読み込み中にエラーが発生しました。");
     }
   };
 
@@ -69,6 +74,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
 
     const deckName = `${selectedCard.color} ${selectedCard.name}`;
     setIsLoading(true);
+    setError(null);
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/decks/`, {
         method: "POST",
@@ -89,10 +95,10 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
         setSelectedColor("");
         onDeckCreated();
       } else {
-        console.error("Failed to create deck");
+        setError("デッキの作成に失敗しました。もう一度お試しください。");
       }
     } catch (error) {
-      console.error("Error creating deck:", error);
+      setError("デッキの作成中にエラーが発生しました。");
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +107,16 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
   const handleManualSubmit = async () => {
     if (!manualName || !manualColor) return;
 
+    // 入力長バリデーション
+    if (manualName.length > 100) {
+      setError("カード名は100文字以内で入力してください。");
+      return;
+    }
+
     setIsLoading(true);
+    setError(null);
+    let createdCustomCardId: string | null = null;
+
     try {
       // Step 1: Create custom card
       const customCardResponse = await fetch(
@@ -120,11 +135,12 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
       );
 
       if (!customCardResponse.ok) {
-        console.error("Failed to create custom card");
+        setError("カスタムカードの作成に失敗しました。");
         return;
       }
 
       const customCard = await customCardResponse.json();
+      createdCustomCardId = customCard.id;
 
       // Step 2: Create deck with custom card
       const deckName = `${manualColor} ${manualName}`;
@@ -152,10 +168,43 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
         setSelectedColor("");
         onDeckCreated();
       } else {
-        console.error("Failed to create deck");
+        // デッキ作成失敗時、作成したカスタムカードを削除（ロールバック）
+        if (createdCustomCardId) {
+          try {
+            await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/custom-cards/${createdCustomCardId}`,
+              {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${idToken}`,
+                },
+              }
+            );
+          } catch (rollbackError) {
+            // ロールバック失敗はログに記録するが、ユーザーには主エラーを表示
+            console.error("Failed to rollback custom card:", rollbackError);
+          }
+        }
+        setError("デッキの作成に失敗しました。もう一度お試しください。");
       }
     } catch (error) {
-      console.error("Error creating deck with custom card:", error);
+      // エラー発生時もロールバックを試行
+      if (createdCustomCardId) {
+        try {
+          await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/custom-cards/${createdCustomCardId}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${idToken}`,
+              },
+            }
+          );
+        } catch (rollbackError) {
+          console.error("Failed to rollback custom card:", rollbackError);
+        }
+      }
+      setError("カスタムカードの作成中にエラーが発生しました。");
     } finally {
       setIsLoading(false);
     }
@@ -169,6 +218,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
     setSelectedColor("");
     setManualName("");
     setManualColor("");
+    setError(null);
   };
 
   return (
@@ -200,18 +250,29 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
             {showManualInput ? (
               /* Manual Input Form */
               <div className="flex-1 space-y-4 py-4">
+                {/* エラーメッセージ表示 */}
+                {error && (
+                  <div className="rounded-md bg-red-50 p-3 dark:bg-red-900/20">
+                    <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+                  </div>
+                )}
                 <div>
+                  <label htmlFor="manual-name-input" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    カード名
+                  </label>
                   <input
+                    id="manual-name-input"
                     type="text"
                     placeholder="Card name"
                     value={manualName}
                     onChange={(e) => setManualName(e.target.value)}
+                    maxLength={100}
                     className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
                   />
                 </div>
                 <div>
                   <label htmlFor="manual-color-input" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Color
+                    カラー
                   </label>
                   <select
                     id="manual-color-input"
@@ -248,6 +309,12 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
             ) : (
               /* Card Selection Grid */
               <>
+                {/* エラーメッセージ表示 */}
+                {error && (
+                  <div className="mb-4 rounded-md bg-red-50 p-3 dark:bg-red-900/20">
+                    <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+                  </div>
+                )}
                 {/* Search and Filter */}
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row">
                   <div className="flex-1">

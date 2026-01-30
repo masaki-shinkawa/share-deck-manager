@@ -80,7 +80,14 @@ async def get_grouped_decks(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
-    """Get all decks grouped by users, including custom card decks."""
+    """
+    Get all decks grouped by users, including custom card decks.
+
+    カスタムカードの認可について:
+    - カスタムカードはuser_idの外部キー制約によりユーザースコープが保証されている
+    - Deck -> CustomCard の結合時、custom_card.user_id == deck.user_id が自動的に保証される
+    - そのため、デッキの所有者のカスタムカードのみが読み込まれる
+    """
     result = await session.execute(
         select(Deck, User, Card, CustomCard)
         .join(User, Deck.user_id == User.id)

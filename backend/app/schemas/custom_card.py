@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator
 from uuid import UUID
 from datetime import datetime
+import html
 
 
 class CustomCardCreate(BaseModel):
@@ -15,7 +16,8 @@ class CustomCardCreate(BaseModel):
             raise ValueError('Card name cannot be empty or whitespace-only')
         if len(v) > 100:
             raise ValueError('Card name must be 100 characters or less')
-        return v
+        # XSS対策: HTMLエスケープを実施
+        return html.escape(v)
 
     @field_validator('color')
     @classmethod
@@ -23,7 +25,8 @@ class CustomCardCreate(BaseModel):
         v = v.strip()
         if not v:
             raise ValueError('Color cannot be empty')
-        return v
+        # XSS対策: HTMLエスケープを実施
+        return html.escape(v)
 
 
 class CustomCardPublic(BaseModel):
