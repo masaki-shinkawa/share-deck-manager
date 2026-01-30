@@ -79,6 +79,38 @@ describe('DeckList', () => {
     });
   });
 
+  describe('Custom card deck display', () => {
+    it('should display custom card name and color as text when no image', () => {
+      const customCardDecks = [
+        {
+          id: 'deck-custom',
+          name: 'Red 未発売リーダー',
+          leader_card: null,
+          custom_card: {
+            id: 'custom-1',
+            name: '未発売リーダー',
+            color: 'Red',
+          },
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      render(
+        <DeckList
+          decks={customCardDecks}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      );
+
+      // Deck name should be visible
+      expect(screen.getByText('Red 未発売リーダー')).toBeInTheDocument();
+      // Custom card color should be displayed as text
+      expect(screen.getByText('Red')).toBeInTheDocument();
+    });
+  });
+
   describe('Multiple decks', () => {
     it('should NOT display any leader names', () => {
       const multipleDecks = [

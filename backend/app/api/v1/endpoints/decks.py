@@ -9,12 +9,14 @@ from app.core.dependencies import get_current_user
 from app.models.deck import Deck
 from app.models.user import User
 from app.models.card import Card
+from app.models.custom_card import CustomCard
 from app.schemas.deck import DeckCreate, DeckUpdate, DeckPublic
 from app.schemas.deck_with_user import (
     GroupedDecksResponse,
     DeckWithUser,
     UserSummary,
-    LeaderCardSummary
+    LeaderCardSummary,
+    CustomCardSummary,
 )
 
 from sqlalchemy.orm import selectinload
@@ -30,7 +32,7 @@ async def list_decks(
     result = await session.execute(
         select(Deck)
         .where(Deck.user_id == user.id)
-        .options(selectinload(Deck.leader_card))
+        .options(selectinload(Deck.leader_card), selectinload(Deck.custom_card))
     )
     decks = result.scalars().all()
     return decks
@@ -41,22 +43,35 @@ async def create_deck(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
-    """Create a new deck"""
+    """Create a new deck with either a leader card or custom card."""
+    if deck_data.custom_card_id:
+        # Verify custom card exists and belongs to user
+        result = await session.execute(
+            select(CustomCard).where(
+                CustomCard.id == deck_data.custom_card_id,
+                CustomCard.user_id == user.id,
+            )
+        )
+        custom_card = result.scalar_one_or_none()
+        if not custom_card:
+            raise HTTPException(status_code=404, detail="Custom card not found")
+
     deck = Deck(
         user_id=user.id,
         name=deck_data.name,
-        leader_card_id=deck_data.leader_card_id
+        leader_card_id=deck_data.leader_card_id,
+        custom_card_id=deck_data.custom_card_id,
     )
 
     session.add(deck)
     await session.commit()
     await session.refresh(deck)
 
-    # Reload with relation
+    # Reload with relations
     result = await session.execute(
         select(Deck)
         .where(Deck.id == deck.id)
-        .options(selectinload(Deck.leader_card))
+        .options(selectinload(Deck.leader_card), selectinload(Deck.custom_card))
     )
     return result.scalar_one()
 
@@ -65,28 +80,21 @@ async def get_grouped_decks(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
-    """
-    Get all decks grouped by users.
-
-    Returns all decks from all users with user and leader card information,
-    organized for display in a user-grouped view.
-    """
-    # Get all decks with user and leader card information
+    """Get all decks grouped by users, including custom card decks."""
     result = await session.execute(
-        select(Deck, User, Card)
+        select(Deck, User, Card, CustomCard)
         .join(User, Deck.user_id == User.id)
-        .join(Card, Deck.leader_card_id == Card.id)
+        .outerjoin(Card, Deck.leader_card_id == Card.id)
+        .outerjoin(CustomCard, Deck.custom_card_id == CustomCard.id)
         .order_by(Deck.created_at.desc())
     )
 
     rows = result.all()
 
-    # Extract unique users and build deck list
     users_dict = {}
     decks_list = []
 
-    for deck, deck_user, card in rows:
-        # Add user to dict if not already present
+    for deck, deck_user, card, custom_card in rows:
         if deck_user.id not in users_dict:
             users_dict[deck_user.id] = UserSummary(
                 id=deck_user.id,
@@ -95,18 +103,31 @@ async def get_grouped_decks(
                 image=deck_user.image
             )
 
-        # Build deck with user info
-        deck_with_user = DeckWithUser(
-            id=deck.id,
-            name=deck.name,
-            user=users_dict[deck_user.id],
-            leader_card=LeaderCardSummary(
+        leader_card_summary = None
+        custom_card_summary = None
+
+        if card:
+            leader_card_summary = LeaderCardSummary(
                 id=card.id,
                 card_id=card.card_id,
                 name=card.name,
                 color=card.color,
                 image_path=card.image_path
-            ),
+            )
+
+        if custom_card:
+            custom_card_summary = CustomCardSummary(
+                id=custom_card.id,
+                name=custom_card.name,
+                color=custom_card.color,
+            )
+
+        deck_with_user = DeckWithUser(
+            id=deck.id,
+            name=deck.name,
+            user=users_dict[deck_user.id],
+            leader_card=leader_card_summary,
+            custom_card=custom_card_summary,
             created_at=deck.created_at
         )
         decks_list.append(deck_with_user)
@@ -127,7 +148,7 @@ async def get_deck(
     result = await session.execute(
         select(Deck)
         .where(Deck.id == deck_id, Deck.user_id == user.id)
-        .options(selectinload(Deck.leader_card))
+        .options(selectinload(Deck.leader_card), selectinload(Deck.custom_card))
     )
     deck = result.scalar_one_or_none()
 
@@ -159,11 +180,11 @@ async def update_deck(
     await session.commit()
     await session.refresh(deck)
 
-    # Reload with leader_card relationship
+    # Reload with relationships
     result = await session.execute(
         select(Deck)
         .where(Deck.id == deck.id)
-        .options(selectinload(Deck.leader_card))
+        .options(selectinload(Deck.leader_card), selectinload(Deck.custom_card))
     )
     return result.scalar_one()
 

@@ -18,11 +18,18 @@ interface LeaderCardSummary {
   image_path: string;
 }
 
+interface CustomCardSummary {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface DeckWithUser {
   id: string;
   name: string;
   user: UserSummary;
-  leader_card: LeaderCardSummary;
+  leader_card: LeaderCardSummary | null;
+  custom_card?: CustomCardSummary | null;
   created_at: string;
 }
 
@@ -33,16 +40,24 @@ interface GroupedDecksResponse {
 }
 
 interface GroupedDeckListProps {
-  idToken: string;
+  idToken?: string;
+  users?: UserSummary[];
+  decks?: DeckWithUser[];
+  totalCount?: number;
 }
 
-export default function GroupedDeckList({ idToken }: GroupedDeckListProps) {
-  const [data, setData] = useState<GroupedDecksResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export default function GroupedDeckList({ idToken, users: propUsers, decks: propDecks, totalCount: propTotalCount }: GroupedDeckListProps) {
+  const [fetchedData, setFetchedData] = useState<GroupedDecksResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(!propDecks);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const users = propUsers ?? fetchedData?.users ?? [];
+  const allDecks = propDecks ?? fetchedData?.decks ?? [];
+  const totalCount = propTotalCount ?? fetchedData?.total_count ?? 0;
+
   const fetchGroupedDecks = async () => {
+    if (!idToken) return;
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/decks/grouped`,
@@ -55,7 +70,7 @@ export default function GroupedDeckList({ idToken }: GroupedDeckListProps) {
 
       if (response.ok) {
         const groupedData = await response.json();
-        setData(groupedData);
+        setFetchedData(groupedData);
       } else {
         console.error("Failed to fetch grouped decks");
       }
@@ -67,24 +82,27 @@ export default function GroupedDeckList({ idToken }: GroupedDeckListProps) {
   };
 
   useEffect(() => {
-    fetchGroupedDecks();
-  }, [idToken]);
+    if (!propDecks && idToken) {
+      fetchGroupedDecks();
+    }
+  }, [idToken, propDecks]);
 
   if (isLoading) {
     return <div className="text-center text-gray-500 dark:text-gray-400">Loading...</div>;
   }
 
-  if (!data) {
+  if (!propDecks && !fetchedData) {
     return <div className="text-center text-gray-500 dark:text-gray-400">Failed to load decks.</div>;
   }
 
   // Filter decks by selected user and search query
-  const filteredDecks = data.decks.filter((deck) => {
+  const filteredDecks = allDecks.filter((deck) => {
     const matchesUser = selectedUserId === null || deck.user.id === selectedUserId;
     const matchesSearch =
       searchQuery === "" ||
       deck.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      deck.leader_card.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (deck.leader_card && deck.leader_card.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (deck.custom_card && deck.custom_card.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (deck.user.nickname && deck.user.nickname.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesUser && matchesSearch;
   });
@@ -113,10 +131,10 @@ export default function GroupedDeckList({ idToken }: GroupedDeckListProps) {
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300"
             }`}
           >
-            All ({data.total_count})
+            All ({totalCount})
           </button>
-          {data.users.map((user) => {
-            const userDeckCount = data.decks.filter((d) => d.user.id === user.id).length;
+          {users.map((user) => {
+            const userDeckCount = allDecks.filter((d) => d.user.id === user.id).length;
             return (
               <button
                 key={user.id}
@@ -156,18 +174,26 @@ export default function GroupedDeckList({ idToken }: GroupedDeckListProps) {
               className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-gray-800 dark:bg-zinc-900"
             >
               <div className="flex items-center gap-4">
-                <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded shadow-sm">
-                  <Image
-                    src={deck.leader_card.image_path}
-                    alt={deck.leader_card.name}
-                    width={224}
-                    height={320}
-                    quality={95}
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                    style={{ imageRendering: "auto" }}
-                    unoptimized
-                  />
-                </div>
+                {deck.custom_card && !deck.leader_card ? (
+                  <div className="relative flex h-20 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-gray-200 shadow-sm dark:bg-zinc-700">
+                    <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
+                      {deck.custom_card.color}
+                    </span>
+                  </div>
+                ) : deck.leader_card ? (
+                  <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded shadow-sm">
+                    <Image
+                      src={deck.leader_card.image_path}
+                      alt={deck.leader_card.name}
+                      width={224}
+                      height={320}
+                      quality={95}
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      style={{ imageRendering: "auto" }}
+                      unoptimized
+                    />
+                  </div>
+                ) : null}
                 <div className="flex-1 min-w-0">
                   <h3 className="truncate font-bold text-gray-900 dark:text-white">
                     {deck.name}
