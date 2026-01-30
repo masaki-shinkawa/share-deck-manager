@@ -61,6 +61,7 @@ async def create_deck(
         name=deck_data.name,
         leader_card_id=deck_data.leader_card_id,
         custom_card_id=deck_data.custom_card_id,
+        status=deck_data.status.value,
     )
 
     session.add(deck)
@@ -129,6 +130,7 @@ async def get_grouped_decks(
             user=users_dict[deck_user.id],
             leader_card=leader_card_summary,
             custom_card=custom_card_summary,
+            status=deck.status,
             created_at=deck.created_at
         )
         decks_list.append(deck_with_user)
@@ -158,14 +160,14 @@ async def get_deck(
 
     return deck
 
-@router.put("/{deck_id}", response_model=DeckPublic)
+@router.patch("/{deck_id}", response_model=DeckPublic)
 async def update_deck(
     deck_id: uuid.UUID,
     deck_data: DeckUpdate,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
-    """Update a deck's name"""
+    """Update a deck's status"""
     result = await session.execute(
         select(Deck).where(Deck.id == deck_id, Deck.user_id == user.id)
     )
@@ -174,7 +176,7 @@ async def update_deck(
     if not deck:
         raise HTTPException(status_code=404, detail="Deck not found")
 
-    deck.name = deck_data.name
+    deck.status = deck_data.status.value
     deck.updated_at = datetime.utcnow()
 
     session.add(deck)

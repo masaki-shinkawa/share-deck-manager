@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from uuid import UUID
 from typing import Optional
+from app.models.deck import DeckStatus
 
 
 class UserSummary(BaseModel):
@@ -49,6 +50,7 @@ class DeckWithUser(BaseModel):
     user: UserSummary
     leader_card: Optional[LeaderCardSummary] = None
     custom_card: Optional[CustomCardSummary] = None
+    status: DeckStatus
     created_at: datetime
 
     class Config:

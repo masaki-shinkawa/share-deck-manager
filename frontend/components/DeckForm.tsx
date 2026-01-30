@@ -23,6 +23,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
+  const [status, setStatus] = useState<"built" | "planning">("built");
 
   // Manual input state
   const [showManualInput, setShowManualInput] = useState(false);
@@ -79,7 +80,8 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
         },
         body: JSON.stringify({
           name: deckName,
-          leader_card_id: selectedCardId
+          leader_card_id: selectedCardId,
+          status: status,
         }),
       });
 
@@ -88,6 +90,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
         setSelectedCardId(null);
         setSearchQuery("");
         setSelectedColor("");
+        setStatus("built");
         onDeckCreated();
       } else {
         console.error("Failed to create deck");
@@ -140,6 +143,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
           body: JSON.stringify({
             name: deckName,
             custom_card_id: customCard.id,
+            status: status,
           }),
         }
       );
@@ -152,6 +156,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
         setManualColor2("");
         setSearchQuery("");
         setSelectedColor("");
+        setStatus("built");
         onDeckCreated();
       } else {
         console.error("Failed to create deck");
@@ -172,6 +177,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
     setManualName("");
     setManualColor1("");
     setManualColor2("");
+    setStatus("built");
   };
 
   return (
@@ -354,6 +360,21 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                       </div>
                     ))
                   )}
+                </div>
+
+                {/* Status Selection */}
+                <div className="mt-4 border-t pt-4 dark:border-gray-800">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    ステータス
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as "built" | "planning")}
+                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
+                  >
+                    <option value="built">構築済み</option>
+                    <option value="planning">検討中</option>
+                  </select>
                 </div>
 
                 <div className="mt-6 flex justify-end gap-3 border-t pt-4 dark:border-gray-800">
