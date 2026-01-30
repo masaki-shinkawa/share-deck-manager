@@ -8,27 +8,41 @@ interface Card {
   id: string;
   card_id: string;
   name: string;
+  color?: string;
   image_path: string;
+}
+
+interface CustomCardSummary {
+  id: string;
+  name: string;
+  color: string;
 }
 
 interface Deck {
   id: string;
   name: string;
-  leader_card_id: string;
-  leader_card: Card;
+  leader_card_id?: string;
+  leader_card: Card | null;
+  custom_card?: CustomCardSummary | null;
   created_at: string;
   updated_at: string;
 }
 
 interface DeckListProps {
-  idToken: string;
+  idToken?: string;
+  decks?: Deck[];
+  onEdit?: (deck: Deck) => void;
+  onDelete?: (deckId: string) => void;
 }
 
-export default function DeckList({ idToken }: DeckListProps) {
-  const [decks, setDecks] = useState<Deck[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }: DeckListProps) {
+  const [fetchedDecks, setFetchedDecks] = useState<Deck[]>([]);
+  const [isLoading, setIsLoading] = useState(!propDecks);
+
+  const decks = propDecks ?? fetchedDecks;
 
   const fetchDecks = async () => {
+    if (!idToken) return;
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/decks/`, {
         headers: {
@@ -38,7 +52,7 @@ export default function DeckList({ idToken }: DeckListProps) {
 
       if (response.ok) {
         const data = await response.json();
-        setDecks(data);
+        setFetchedDecks(data);
       } else {
         console.error("Failed to fetch decks");
       }
@@ -50,10 +64,18 @@ export default function DeckList({ idToken }: DeckListProps) {
   };
 
   useEffect(() => {
-    fetchDecks();
-  }, [idToken]);
+    if (!propDecks && idToken) {
+      fetchDecks();
+    }
+  }, [idToken, propDecks]);
 
   const handleDelete = async (deckId: string) => {
+    if (onDelete) {
+      onDelete(deckId);
+      return;
+    }
+
+    if (!idToken) return;
     if (!confirm("Are you sure you want to delete this deck?")) return;
 
     try {
@@ -83,7 +105,7 @@ export default function DeckList({ idToken }: DeckListProps) {
 
   return (
     <div className="space-y-6">
-      <DeckForm idToken={idToken} onDeckCreated={fetchDecks} />
+      {idToken && <DeckForm idToken={idToken} onDeckCreated={fetchDecks} />}
 
       {decks.length === 0 ? (
         <p className="text-center text-gray-500 dark:text-gray-400">
@@ -97,18 +119,26 @@ export default function DeckList({ idToken }: DeckListProps) {
               className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-gray-800 dark:bg-zinc-900"
             >
               <div className="flex items-center gap-4">
-                <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded shadow-sm">
-                  <Image
-                    src={deck.leader_card.image_path}
-                    alt={deck.leader_card.name}
-                    width={224}
-                    height={320}
-                    quality={95}
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                    style={{ imageRendering: 'auto' }}
-                    unoptimized
-                  />
-                </div>
+                {deck.custom_card && !deck.leader_card ? (
+                  <div className="relative flex h-20 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-gray-200 shadow-sm dark:bg-zinc-700">
+                    <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
+                      {deck.custom_card.color}
+                    </span>
+                  </div>
+                ) : deck.leader_card ? (
+                  <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded shadow-sm">
+                    <Image
+                      src={deck.leader_card.image_path}
+                      alt={deck.leader_card.name}
+                      width={224}
+                      height={320}
+                      quality={95}
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      style={{ imageRendering: 'auto' }}
+                      unoptimized
+                    />
+                  </div>
+                ) : null}
                 <div className="flex-1 min-w-0">
                   <h3 className="truncate font-bold text-gray-900 dark:text-white">
                     {deck.name}

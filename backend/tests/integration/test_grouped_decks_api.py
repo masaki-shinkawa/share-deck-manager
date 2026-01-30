@@ -147,9 +147,10 @@ class TestGroupedDecksEndpoint:
             mock_session = MagicMock()
             mock_result = MagicMock()
             # Return rows in order: newer deck first
+            # Tuple is (Deck, User, Card|None, CustomCard|None)
             mock_result.all.return_value = [
-                (mock_deck2, mock_user2, mock_card2),
-                (mock_deck1, mock_user1, mock_card1),
+                (mock_deck2, mock_user2, mock_card2, None),
+                (mock_deck1, mock_user1, mock_card1, None),
             ]
             mock_session.execute = AsyncMock(return_value=mock_result)
             return mock_session
