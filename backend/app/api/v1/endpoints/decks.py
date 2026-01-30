@@ -119,7 +119,8 @@ async def get_grouped_decks(
             custom_card_summary = CustomCardSummary(
                 id=custom_card.id,
                 name=custom_card.name,
-                color=custom_card.color,
+                color1=custom_card.color1,
+                color2=custom_card.color2,
             )
 
         deck_with_user = DeckWithUser(

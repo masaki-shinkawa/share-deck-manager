@@ -27,7 +27,8 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
   // Manual input state
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualName, setManualName] = useState("");
-  const [manualColor, setManualColor] = useState("");
+  const [manualColor1, setManualColor1] = useState("");
+  const [manualColor2, setManualColor2] = useState("");
 
   useEffect(() => {
     if (isOpen && cards.length === 0) {
@@ -61,7 +62,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
   });
 
   // Get unique colors from all cards
-  const uniqueColors = Array.from(new Set(cards.map((card) => card.color))).sort();
+  const colors = ["赤", "緑", "青", "紫", "黒", "黄"];
 
   const handleSubmit = async () => {
     const selectedCard = cards.find((c) => c.id === selectedCardId);
@@ -99,7 +100,9 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
   };
 
   const handleManualSubmit = async () => {
-    if (!manualName || !manualColor) return;
+    if (!manualName || !manualColor1) return;
+
+    const [color1, color2 = null] = colors.filter((color) => [manualColor1, manualColor2].includes(color));
 
     setIsLoading(true);
     try {
@@ -112,10 +115,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${idToken}`,
           },
-          body: JSON.stringify({
-            name: manualName,
-            color: manualColor,
-          }),
+          body: JSON.stringify({ name: manualName, color1, color2 }),
         }
       );
 
@@ -127,7 +127,8 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
       const customCard = await customCardResponse.json();
 
       // Step 2: Create deck with custom card
-      const deckName = `${manualColor} ${manualName}`;
+      const colorDisplay = manualColor2 ? `${manualColor1}/${manualColor2}` : manualColor1;
+      const deckName = `${colorDisplay} ${manualName}`;
       const deckResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/decks/`,
         {
@@ -147,7 +148,8 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
         setIsOpen(false);
         setShowManualInput(false);
         setManualName("");
-        setManualColor("");
+        setManualColor1("");
+        setManualColor2("");
         setSearchQuery("");
         setSelectedColor("");
         onDeckCreated();
@@ -168,7 +170,8 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
     setSearchQuery("");
     setSelectedColor("");
     setManualName("");
-    setManualColor("");
+    setManualColor1("");
+    setManualColor2("");
   };
 
   return (
@@ -210,22 +213,43 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                   />
                 </div>
                 <div>
-                  <label htmlFor="manual-color-input" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Color
+                  <label htmlFor="manual-color1-input" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Color 1 <span className="text-red-500">*</span>
                   </label>
                   <select
-                    id="manual-color-input"
-                    data-testid="manual-color-select"
-                    value={manualColor}
-                    onChange={(e) => setManualColor(e.target.value)}
+                    id="manual-color1-input"
+                    data-testid="manual-color1-select"
+                    value={manualColor1}
+                    onChange={(e) => setManualColor1(e.target.value)}
                     className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
                   >
-                    <option value="">Select color</option>
-                    {uniqueColors.map((color) => (
+                    <option value="">Select color 1</option>
+                    {colors.map((color) => (
                       <option key={color} value={color}>
                         {color}
                       </option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="manual-color2-input" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Color 2 <span className="text-xs text-gray-500">(Optional)</span>
+                  </label>
+                  <select
+                    id="manual-color2-input"
+                    data-testid="manual-color2-select"
+                    value={manualColor2}
+                    onChange={(e) => setManualColor2(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
+                  >
+                    <option value="">--- (None)</option>
+                    {colors
+                      .filter((color) => color !== manualColor1)
+                      .map((color) => (
+                        <option key={color} value={color}>
+                          {color}
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div className="flex gap-3 pt-4">
@@ -238,7 +262,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                   <button
                     data-testid="manual-create-button"
                     onClick={handleManualSubmit}
-                    disabled={!manualName || !manualColor || isLoading}
+                    disabled={!manualName || !manualColor1 || isLoading}
                     className="rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
                   >
                     {isLoading ? "Creating..." : "Create Deck"}
@@ -267,7 +291,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                       className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
                     >
                       <option value="">All Colors</option>
-                      {uniqueColors.map((color) => (
+                      {colors.map((color) => (
                         <option key={color} value={color}>
                           {color}
                         </option>
@@ -302,11 +326,10 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                       <div
                         key={card.id}
                         onClick={() => setSelectedCardId(card.id)}
-                        className={`group relative cursor-pointer rounded-lg border-2 p-1 transition-all ${
-                          selectedCardId === card.id
-                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                            : "border-transparent bg-gray-50 hover:border-gray-300 dark:bg-zinc-800 dark:hover:border-gray-600"
-                        }`}
+                        className={`group relative cursor-pointer rounded-lg border-2 p-1 transition-all ${selectedCardId === card.id
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                          : "border-transparent bg-gray-50 hover:border-gray-300 dark:bg-zinc-800 dark:hover:border-gray-600"
+                          }`}
                       >
                         <div className="relative aspect-[2.5/3.5] overflow-hidden rounded">
                           <Image

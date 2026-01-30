@@ -11,8 +11,8 @@ export default async function DecksPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gray-50 py-12 dark:bg-zinc-900">
-      <div className="w-full max-w-4xl space-y-8 rounded-xl bg-white p-10 shadow-lg dark:bg-zinc-800">
+    <div className="flex min-h-screen flex-col items-center bg-gray-50 md:py-12 dark:bg-zinc-900">
+      <div className="w-full max-w-4xl space-y-8 md:rounded-xl bg-white p-10 shadow-lg dark:bg-zinc-800">
         <div className="flex items-center justify-between border-b border-gray-200 pb-6 dark:border-gray-700">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             My Decks

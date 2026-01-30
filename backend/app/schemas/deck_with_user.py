@@ -35,7 +35,8 @@ class CustomCardSummary(BaseModel):
     """Custom card summary for deck list."""
     id: UUID
     name: str
-    color: str
+    color1: str
+    color2: str | None
 
     class Config:
         from_attributes = True

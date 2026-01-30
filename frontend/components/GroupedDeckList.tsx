@@ -21,7 +21,8 @@ interface LeaderCardSummary {
 interface CustomCardSummary {
   id: string;
   name: string;
-  color: string;
+  color1: string;
+  color2: string | null;
 }
 
 interface DeckWithUser {
@@ -125,11 +126,10 @@ export default function GroupedDeckList({ idToken, users: propUsers, decks: prop
         <div className="flex gap-4 overflow-x-auto">
           <button
             onClick={() => setSelectedUserId(null)}
-            className={`whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-              selectedUserId === null
-                ? "border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400"
-                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300"
-            }`}
+            className={`whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors ${selectedUserId === null
+              ? "border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400"
+              : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300"
+              }`}
           >
             All ({totalCount})
           </button>
@@ -139,11 +139,10 @@ export default function GroupedDeckList({ idToken, users: propUsers, decks: prop
               <button
                 key={user.id}
                 onClick={() => setSelectedUserId(user.id)}
-                className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-                  selectedUserId === user.id
-                    ? "border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400"
-                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300"
-                }`}
+                className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors ${selectedUserId === user.id
+                  ? "border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400"
+                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300"
+                  }`}
               >
                 {user.image && (
                   <Image
@@ -177,7 +176,10 @@ export default function GroupedDeckList({ idToken, users: propUsers, decks: prop
                 {deck.custom_card && !deck.leader_card ? (
                   <div className="relative flex h-20 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-gray-200 shadow-sm dark:bg-zinc-700">
                     <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
-                      {deck.custom_card.color}
+                      {deck.custom_card.color2 ?
+                        `${deck.custom_card.color1}/${deck.custom_card.color2} ${deck.custom_card.name}`
+                        : `${deck.custom_card.color1} ${deck.custom_card.name}`
+                      }
                     </span>
                   </div>
                 ) : deck.leader_card ? (

@@ -21,7 +21,8 @@ async def create_custom_card(
     custom_card = CustomCard(
         user_id=user.id,
         name=card_data.name,
-        color=card_data.color,
+        color1=card_data.color1,
+        color2=card_data.color2,
     )
 
     session.add(custom_card)

@@ -15,7 +15,8 @@ interface Card {
 interface CustomCardSummary {
   id: string;
   name: string;
-  color: string;
+  color1: string;
+  color2: string | null;
 }
 
 interface Deck {
@@ -122,7 +123,10 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
                 {deck.custom_card && !deck.leader_card ? (
                   <div className="relative flex h-20 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-gray-200 shadow-sm dark:bg-zinc-700">
                     <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
-                      {deck.custom_card.color}
+                      {deck.custom_card.color2 ?
+                        `${deck.custom_card.color1}/${deck.custom_card.color2} ${deck.custom_card.name}`
+                        : `${deck.custom_card.color1} ${deck.custom_card.name}`
+                      }
                     </span>
                   </div>
                 ) : deck.leader_card ? (

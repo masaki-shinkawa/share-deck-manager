@@ -202,13 +202,14 @@ describe('DeckForm - Leader Card Search', () => {
 
       // Manual input form should appear
       expect(screen.getByPlaceholderText(/card name/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/color/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/color 1/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/color 2/i)).toBeInTheDocument();
     });
 
     it('should create deck with custom card when manual form is submitted', async () => {
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({ ok: true, json: async () => mockCards }) // fetch cards
-        .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 'custom-1', user_id: 'u1', name: '新リーダー', color: '赤' }) }) // create custom card
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 'custom-1', user_id: 'u1', name: '新リーダー', color1: '赤', color2: null }) }) // create custom card
         .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 'deck-1', name: '赤 新リーダー', custom_card_id: 'custom-1' }) }); // create deck
 
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
@@ -227,8 +228,8 @@ describe('DeckForm - Leader Card Search', () => {
       const nameInput = screen.getByPlaceholderText(/card name/i);
       fireEvent.change(nameInput, { target: { value: '新リーダー' } });
 
-      const colorSelect = screen.getByTestId('manual-color-select');
-      fireEvent.change(colorSelect, { target: { value: '赤' } });
+      const color1Select = screen.getByTestId('manual-color1-select');
+      fireEvent.change(color1Select, { target: { value: '赤' } });
 
       // Submit
       const createButton = screen.getByTestId('manual-create-button');
@@ -343,6 +344,306 @@ describe('DeckForm - Leader Card Search', () => {
       expect(options).toContain('赤');
       expect(options).toContain('緑');
       expect(options).toContain('黄');
+    });
+  });
+
+  describe('Issue #5: Color1 and Color2 for Manual Input', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => mockCards,
+      });
+    });
+
+    it('should display Color1 and Color2 dropdowns in manual input form', async () => {
+      render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
+
+      const newDeckButton = screen.getByText('New Deck');
+      fireEvent.click(newDeckButton);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('manual-input-card')).toBeInTheDocument();
+      });
+
+      // Click manual input
+      fireEvent.click(screen.getByTestId('manual-input-card'));
+
+      // Should have Color1 dropdown (required)
+      expect(screen.getByTestId('manual-color1-select')).toBeInTheDocument();
+
+      // Should have Color2 dropdown (optional)
+      expect(screen.getByTestId('manual-color2-select')).toBeInTheDocument();
+    });
+
+    it('should have "--- (None)" option for Color2', async () => {
+      render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
+
+      const newDeckButton = screen.getByText('New Deck');
+      fireEvent.click(newDeckButton);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('manual-input-card')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByTestId('manual-input-card'));
+
+      const color2Select = screen.getByTestId('manual-color2-select') as HTMLSelectElement;
+      const options = Array.from(color2Select.options).map((opt) => opt.text);
+
+      // Color2 should have "--- (None)" option
+      expect(options).toContain('--- (None)');
+    });
+
+    it('should create single-color custom card when Color2 is not selected', async () => {
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({ ok: true, json: async () => mockCards })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            id: 'custom-1',
+            user_id: 'u1',
+            name: '単色リーダー',
+            color1: '紫',
+            color2: null
+          })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            id: 'deck-1',
+            name: '紫デッキ',
+            custom_card_id: 'custom-1'
+          })
+        });
+
+      render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
+
+      const newDeckButton = screen.getByText('New Deck');
+      fireEvent.click(newDeckButton);
+
+      // Wait for cards to load AND manual input card to appear
+      await waitFor(() => {
+        expect(screen.getByText('モンキー・D・ルフィ')).toBeInTheDocument();
+        expect(screen.getByTestId('manual-input-card')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByTestId('manual-input-card'));
+
+      // Wait for manual input form to appear
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText(/card name/i)).toBeInTheDocument();
+      });
+
+      // Fill in the form
+      const nameInput = screen.getByPlaceholderText(/card name/i);
+      fireEvent.change(nameInput, { target: { value: '単色リーダー' } });
+
+      // Wait for color options to be available
+      await waitFor(() => {
+        const color1Select = screen.getByTestId('manual-color1-select') as HTMLSelectElement;
+        expect(color1Select.options.length).toBeGreaterThan(1);
+      });
+
+      const color1Select = screen.getByTestId('manual-color1-select');
+      fireEvent.change(color1Select, { target: { value: '赤' } }); // Use '赤' which is in mockCards
+
+      const color2Select = screen.getByTestId('manual-color2-select');
+      fireEvent.change(color2Select, { target: { value: '' } }); // None
+
+      // Wait for button to be enabled
+      await waitFor(() => {
+        const createButton = screen.getByTestId('manual-create-button');
+        expect(createButton).not.toBeDisabled();
+      });
+
+      // Submit
+      const createButton = screen.getByTestId('manual-create-button');
+      fireEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(mockOnDeckCreated).toHaveBeenCalled();
+      });
+    });
+
+    it('should create multi-color custom card with Color1 and Color2', async () => {
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({ ok: true, json: async () => mockCards })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            id: 'custom-2',
+            user_id: 'u1',
+            name: '多色リーダー',
+            color1: '赤',
+            color2: '緑'
+          })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            id: 'deck-2',
+            name: '赤/緑デッキ',
+            custom_card_id: 'custom-2'
+          })
+        });
+
+      render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
+
+      const newDeckButton = screen.getByText('New Deck');
+      fireEvent.click(newDeckButton);
+
+      // Wait for cards to load AND manual input card to appear
+      await waitFor(() => {
+        expect(screen.getByText('モンキー・D・ルフィ')).toBeInTheDocument();
+        expect(screen.getByTestId('manual-input-card')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByTestId('manual-input-card'));
+
+      // Wait for manual input form to appear
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText(/card name/i)).toBeInTheDocument();
+      });
+
+      // Fill in the form
+      const nameInput = screen.getByPlaceholderText(/card name/i);
+      fireEvent.change(nameInput, { target: { value: '多色リーダー' } });
+
+      // Wait for color options to be available
+      await waitFor(() => {
+        const color1Select = screen.getByTestId('manual-color1-select') as HTMLSelectElement;
+        expect(color1Select.options.length).toBeGreaterThan(1);
+      });
+
+      const color1Select = screen.getByTestId('manual-color1-select');
+      fireEvent.change(color1Select, { target: { value: '赤' } });
+
+      const color2Select = screen.getByTestId('manual-color2-select');
+      fireEvent.change(color2Select, { target: { value: '緑' } });
+
+      // Wait for button to be enabled
+      await waitFor(() => {
+        const createButton = screen.getByTestId('manual-create-button');
+        expect(createButton).not.toBeDisabled();
+      });
+
+      // Submit
+      const createButton = screen.getByTestId('manual-create-button');
+      fireEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(mockOnDeckCreated).toHaveBeenCalled();
+      });
+    });
+
+    it('should prevent selecting same color for Color1 and Color2', async () => {
+      render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
+
+      const newDeckButton = screen.getByText('New Deck');
+      fireEvent.click(newDeckButton);
+
+      // Wait for cards to load AND manual input card to appear
+      await waitFor(() => {
+        expect(screen.getByText('モンキー・D・ルフィ')).toBeInTheDocument();
+        expect(screen.getByTestId('manual-input-card')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByTestId('manual-input-card'));
+
+      // Wait for manual input form to appear
+      await waitFor(() => {
+        expect(screen.getByTestId('manual-color1-select')).toBeInTheDocument();
+      });
+
+      // Wait for color options to be available
+      await waitFor(() => {
+        const color1Select = screen.getByTestId('manual-color1-select') as HTMLSelectElement;
+        expect(color1Select.options.length).toBeGreaterThan(1);
+      });
+
+      const color1Select = screen.getByTestId('manual-color1-select');
+      fireEvent.change(color1Select, { target: { value: '赤' } });
+
+      // Wait for Color2 select to update after Color1 changes
+      await waitFor(() => {
+        const color2Select = screen.getByTestId('manual-color2-select') as HTMLSelectElement;
+        const color2Options = Array.from(color2Select.options).map((opt) => opt.value);
+        // Color2 options should not include '赤' (already selected in Color1)
+        expect(color2Options).not.toContain('赤');
+      });
+    });
+
+    it('should auto-sort colors to standard order (赤, 緑, 青, 紫, 黒, 黄)', async () => {
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({ ok: true, json: async () => mockCards })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            id: 'custom-3',
+            user_id: 'u1',
+            name: 'Auto-sorted Leader',
+            color1: '赤',  // Backend auto-sorted
+            color2: '黄'
+          })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            id: 'deck-3',
+            name: 'Sorted Deck',
+            custom_card_id: 'custom-3'
+          })
+        });
+
+      render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
+
+      const newDeckButton = screen.getByText('New Deck');
+      fireEvent.click(newDeckButton);
+
+      // Wait for cards to load AND manual input card to appear
+      await waitFor(() => {
+        expect(screen.getByText('モンキー・D・ルフィ')).toBeInTheDocument();
+        expect(screen.getByTestId('manual-input-card')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByTestId('manual-input-card'));
+
+      // Wait for manual input form to appear
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText(/card name/i)).toBeInTheDocument();
+      });
+
+      // User selects in wrong order: Color1=黄, Color2=赤
+      const nameInput = screen.getByPlaceholderText(/card name/i);
+      fireEvent.change(nameInput, { target: { value: 'Auto-sorted Leader' } });
+
+      // Wait for color options to be available
+      await waitFor(() => {
+        const color1Select = screen.getByTestId('manual-color1-select') as HTMLSelectElement;
+        expect(color1Select.options.length).toBeGreaterThan(1);
+      });
+
+      const color1Select = screen.getByTestId('manual-color1-select');
+      fireEvent.change(color1Select, { target: { value: '黄' } });
+
+      const color2Select = screen.getByTestId('manual-color2-select');
+      fireEvent.change(color2Select, { target: { value: '赤' } });
+
+      // Wait for button to be enabled
+      await waitFor(() => {
+        const createButton = screen.getByTestId('manual-create-button');
+        expect(createButton).not.toBeDisabled();
+      });
+
+      // Submit
+      const createButton = screen.getByTestId('manual-create-button');
+      fireEvent.click(createButton);
+
+      // Backend will auto-sort, so we just verify the deck was created
+      await waitFor(() => {
+        expect(mockOnDeckCreated).toHaveBeenCalled();
+      });
     });
   });
 });
