@@ -21,12 +21,17 @@ export const customCardsApi = {
    * Create a new custom card
    */
   create: async (data: CustomCardCreate, token: string): Promise<CustomCard> => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_URL}/custom-cards/`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: `next-auth.session-token=${token}`,
-      },
+      headers,
       credentials: 'include',
       body: JSON.stringify(data),
     });
