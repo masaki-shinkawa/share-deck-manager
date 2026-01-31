@@ -92,6 +92,3 @@ Desktop.ini
 
 # Claude Code local settings
 .claude/settings.local.json
-
-# Reference materials (not for production)
-__purchase/

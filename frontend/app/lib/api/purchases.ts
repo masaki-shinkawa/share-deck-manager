@@ -3,7 +3,7 @@
  * Provides type-safe API calls for purchase management features
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 // Types
 export interface Store {
@@ -18,7 +18,6 @@ export interface Store {
 export interface PurchaseList {
   id: string;
   user_id: string;
-  deck_id: string | null;
   name: string | null;
   status: 'planning' | 'purchased';
   created_at: string;
@@ -39,6 +38,7 @@ export interface PurchaseItemWithCard extends PurchaseItem {
   card_name: string | null;
   card_color: string | null;
   card_image_path: string | null;
+  prices?: PriceEntry[];
 }
 
 export interface PriceEntry {
@@ -64,23 +64,17 @@ export interface OptimalPurchasePlan {
   store_summary: Record<string, number>;
 }
 
-// Helper function to get auth token
-async function getAuthToken(): Promise<string | null> {
-  // NextAuth session token will be automatically sent via cookies
-  return null;
-}
-
 // Helper function for API calls
 async function apiCall<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  token?: string
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  const token = await getAuthToken();
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string>),
   };
 
   if (token) {
@@ -103,108 +97,106 @@ async function apiCall<T>(
 
 // Store API
 export const storesApi = {
-  list: () => apiCall<Store[]>('/stores'),
+  list: (token?: string) => apiCall<Store[]>('/api/v1/stores', {}, token),
 
-  create: (data: { name: string; color: string }) =>
-    apiCall<Store>('/stores', {
+  create: (data: { name: string; color: string }, token?: string) =>
+    apiCall<Store>('/api/v1/stores', {
       method: 'POST',
       body: JSON.stringify(data),
-    }),
+    }, token),
 
-  update: (storeId: string, data: { name?: string; color?: string }) =>
-    apiCall<Store>(`/stores/${storeId}`, {
+  update: (storeId: string, data: { name?: string; color?: string }, token?: string) =>
+    apiCall<Store>(`/api/v1/stores/${storeId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
-    }),
+    }, token),
 
-  delete: (storeId: string) =>
-    apiCall<void>(`/stores/${storeId}`, {
+  delete: (storeId: string, token?: string) =>
+    apiCall<void>(`/api/v1/stores/${storeId}`, {
       method: 'DELETE',
-    }),
+    }, token),
 };
 
 // Purchase List API
 export const purchaseListsApi = {
-  list: () => apiCall<PurchaseList[]>('/purchases'),
+  list: (token?: string) => apiCall<PurchaseList[]>('/api/v1/purchases', {}, token),
 
-  get: (listId: string) => apiCall<PurchaseList>(`/purchases/${listId}`),
+  get: (listId: string, token?: string) => apiCall<PurchaseList>(`/api/v1/purchases/${listId}`, {}, token),
 
   create: (data: {
-    deck_id?: string | null;
     name?: string | null;
     status?: 'planning' | 'purchased';
-  }) =>
-    apiCall<PurchaseList>('/purchases', {
+  }, token?: string) =>
+    apiCall<PurchaseList>('/api/v1/purchases', {
       method: 'POST',
       body: JSON.stringify(data),
-    }),
+    }, token),
 
   update: (listId: string, data: {
-    deck_id?: string | null;
     name?: string | null;
     status?: 'planning' | 'purchased';
-  }) =>
-    apiCall<PurchaseList>(`/purchases/${listId}`, {
+  }, token?: string) =>
+    apiCall<PurchaseList>(`/api/v1/purchases/${listId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
-    }),
+    }, token),
 
-  delete: (listId: string) =>
-    apiCall<void>(`/purchases/${listId}`, {
+  delete: (listId: string, token?: string) =>
+    apiCall<void>(`/api/v1/purchases/${listId}`, {
       method: 'DELETE',
-    }),
+    }, token),
 };
 
 // Purchase Item API
 export const purchaseItemsApi = {
-  list: (listId: string) =>
-    apiCall<PurchaseItemWithCard[]>(`/purchases/${listId}/items`),
+  list: (listId: string, token?: string) =>
+    apiCall<PurchaseItemWithCard[]>(`/api/v1/purchases/${listId}/items`, {}, token),
 
   create: (listId: string, data: {
     card_id?: string | null;
     custom_card_id?: string | null;
     quantity: number;
     selected_store_id?: string | null;
-  }) =>
-    apiCall<PurchaseItem>(`/purchases/${listId}/items`, {
+  }, token?: string) =>
+    apiCall<PurchaseItem>(`/api/v1/purchases/${listId}/items`, {
       method: 'POST',
       body: JSON.stringify({ ...data, list_id: listId }),
-    }),
+    }, token),
 
   update: (listId: string, itemId: string, data: {
     quantity?: number;
     selected_store_id?: string | null;
-  }) =>
-    apiCall<PurchaseItem>(`/purchases/${listId}/items/${itemId}`, {
+  }, token?: string) =>
+    apiCall<PurchaseItem>(`/api/v1/purchases/${listId}/items/${itemId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
-    }),
+    }, token),
 
-  delete: (listId: string, itemId: string) =>
-    apiCall<void>(`/purchases/${listId}/items/${itemId}`, {
+  delete: (listId: string, itemId: string, token?: string) =>
+    apiCall<void>(`/api/v1/purchases/${listId}/items/${itemId}`, {
       method: 'DELETE',
-    }),
+    }, token),
 };
 
 // Price API
 export const pricesApi = {
-  list: (itemId: string) =>
-    apiCall<PriceEntry[]>(`/purchases/items/${itemId}/prices`),
+  list: (itemId: string, token?: string) =>
+    apiCall<PriceEntry[]>(`/api/v1/purchases/items/${itemId}/prices`, {}, token),
 
-  update: (itemId: string, storeId: string, data: { price: number | null }) =>
-    apiCall<PriceEntry>(`/purchases/items/${itemId}/prices/${storeId}`, {
+  update: (itemId: string, storeId: string, data: { price: number | null }, token?: string) =>
+    apiCall<PriceEntry>(`/api/v1/purchases/items/${itemId}/prices/${storeId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
-    }),
+    }, token),
 
-  delete: (itemId: string, storeId: string) =>
-    apiCall<void>(`/purchases/items/${itemId}/prices/${storeId}`, {
+  delete: (itemId: string, storeId: string, token?: string) =>
+    apiCall<void>(`/api/v1/purchases/items/${itemId}/prices/${storeId}`, {
       method: 'DELETE',
-    }),
+    }, token),
 };
 
 // Optimal Plan API
 export const optimalPlanApi = {
-  calculate: (listId: string) =>
-    apiCall<OptimalPurchasePlan>(`/purchases/${listId}/optimal-plan`),
+  calculate: (listId: string, token?: string) =>
+    apiCall<OptimalPurchasePlan>(`/api/v1/purchases/${listId}/optimal-plan`, {}, token),
 };

@@ -7,7 +7,6 @@ from uuid import UUID
 from app.db.session import get_session
 from app.core.dependencies import get_current_user
 from app.models.purchase_list import PurchaseList
-from app.models.deck import Deck
 from app.models.user import User
 from app.schemas.purchase_list import PurchaseListCreate, PurchaseListUpdate, PurchaseListPublic
 
@@ -36,21 +35,8 @@ async def create_purchase_list(
     session: AsyncSession = Depends(get_session)
 ):
     """Create a new purchase list"""
-    # Verify deck exists and belongs to user if deck_id is provided
-    if list_data.deck_id:
-        result = await session.execute(
-            select(Deck).where(
-                Deck.id == list_data.deck_id,
-                Deck.user_id == user.id
-            )
-        )
-        deck = result.scalar_one_or_none()
-        if not deck:
-            raise HTTPException(status_code=404, detail="Deck not found")
-
     purchase_list = PurchaseList(
         user_id=user.id,
-        deck_id=list_data.deck_id,
         name=list_data.name,
         status=list_data.status.value
     )
@@ -101,19 +87,6 @@ async def update_purchase_list(
 
     if not purchase_list:
         raise HTTPException(status_code=404, detail="Purchase list not found")
-
-    # Verify deck exists and belongs to user if deck_id is being updated
-    if list_data.deck_id is not None and list_data.deck_id != purchase_list.deck_id:
-        result = await session.execute(
-            select(Deck).where(
-                Deck.id == list_data.deck_id,
-                Deck.user_id == user.id
-            )
-        )
-        deck = result.scalar_one_or_none()
-        if not deck:
-            raise HTTPException(status_code=404, detail="Deck not found")
-        purchase_list.deck_id = list_data.deck_id
 
     if list_data.name is not None:
         purchase_list.name = list_data.name

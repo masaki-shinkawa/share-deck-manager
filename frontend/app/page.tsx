@@ -109,6 +109,13 @@ export default async function DashboardPage() {
             icon="arrow"
           />
 
+          <DashboardCard
+            title="Purchase Management"
+            description="カード購入を管理"
+            href="/purchase"
+            icon="arrow"
+          />
+
           {userData.role === "admin" && (
             <DashboardCard
               title="管理者ページ"
@@ -117,13 +124,6 @@ export default async function DashboardPage() {
               icon="arrow"
             />
           )}
-
-          <DashboardCard
-            title="Coming Soon"
-            description="新機能開発中"
-            icon="lock"
-            disabled
-          />
         </div>
       </div>
     </div>
