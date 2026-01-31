@@ -14,6 +14,7 @@ import {
   type PurchaseItemWithCard,
   type OptimalPurchasePlan,
 } from '@/app/lib/api/purchases';
+import { customCardsApi } from '@/app/lib/api/custom-cards';
 import type { CardItem, Store, OptimalPurchase } from '@/app/lib/types';
 import { Header } from '@/app/components/shopping-list/header';
 import { StoreTabs } from '@/app/components/shopping-list/store-tabs';
@@ -140,21 +141,23 @@ export default function PurchasePage() {
     if (!token || !purchaseList) return;
 
     try {
-      // TODO: Implement custom card creation API
-      // For now, we need to create a custom card first, then use its ID
-      alert('カード追加機能は現在開発中です。Custom Cardの作成APIが必要です。');
+      // Create custom card first
+      const customCard = await customCardsApi.create(
+        { name, color1: '赤' }, // Default color
+        token
+      );
 
-      // Temporary: Use card_id (null) - this will fail validation
-      // await purchaseItemsApi.create(
-      //   purchaseList.id,
-      //   {
-      //     card_id: null,
-      //     custom_card_id: null, // Need to create custom card first
-      //     quantity,
-      //   },
-      //   token
-      // );
-      // await loadData();
+      // Create purchase item with the new custom_card_id
+      await purchaseItemsApi.create(
+        purchaseList.id,
+        {
+          custom_card_id: customCard.id,
+          quantity,
+        },
+        token
+      );
+
+      await loadData();
     } catch (err) {
       alert('Failed to add item: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
