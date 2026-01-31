@@ -11,6 +11,7 @@ from app.models.card import Card
 from app.models.custom_card import CustomCard
 from app.models.store import Store
 from app.models.user import User
+from app.models.price_entry import PriceEntry
 from app.schemas.purchase_item import (
     PurchaseItemCreate,
     PurchaseItemUpdate,
@@ -54,6 +55,14 @@ async def list_purchase_items(
         card_color = card.color if card else (custom_card.color1 if custom_card else None)
         card_image_path = card.image_path if card else None
 
+        # Load price entries for this item
+        price_result = await session.execute(
+            select(PriceEntry)
+            .where(PriceEntry.item_id == item.id)
+            .order_by(PriceEntry.updated_at.desc())
+        )
+        price_entries = price_result.scalars().all()
+
         items_with_cards.append(PurchaseItemWithCard(
             id=item.id,
             list_id=item.list_id,
@@ -64,7 +73,8 @@ async def list_purchase_items(
             created_at=item.created_at,
             card_name=card_name,
             card_color=card_color,
-            card_image_path=card_image_path
+            card_image_path=card_image_path,
+            price_entries=price_entries
         ))
 
     return items_with_cards
@@ -130,6 +140,23 @@ async def create_purchase_item(
     )
 
     session.add(purchase_item)
+    await session.flush()  # Get the item ID before committing
+
+    # Auto-create price entries for all existing stores owned by this user
+    result = await session.execute(
+        select(Store).where(Store.user_id == user.id)
+    )
+    user_stores = result.scalars().all()
+
+    # Create NULL price entries for each store
+    for store in user_stores:
+        price_entry = PriceEntry(
+            item_id=purchase_item.id,
+            store_id=store.id,
+            price=None  # Out of stock by default, user will fill in later
+        )
+        session.add(price_entry)
+
     await session.commit()
     await session.refresh(purchase_item)
 

@@ -4,10 +4,12 @@ from datetime import datetime
 from uuid import UUID
 from pydantic import model_validator
 
+from app.schemas.price_entry import PriceEntryPublic
+
 
 class PurchaseItemCreate(SQLModel):
     """購入アイテム作成スキーマ"""
-    list_id: UUID = Field(description="Purchase list ID")
+    # list_id comes from path parameter, not request body
     card_id: Optional[UUID] = Field(default=None, description="Card ID (from cards table)")
     custom_card_id: Optional[UUID] = Field(default=None, description="Custom card ID")
     quantity: int = Field(ge=1, le=10, description="Quantity (1-10)")
@@ -41,7 +43,8 @@ class PurchaseItemPublic(SQLModel):
 
 
 class PurchaseItemWithCard(PurchaseItemPublic):
-    """カード情報を含む購入アイテム"""
+    """カード情報と価格を含む購入アイテム"""
     card_name: Optional[str] = None
     card_color: Optional[str] = None
     card_image_path: Optional[str] = None
+    price_entries: list[PriceEntryPublic] = Field(default_factory=list)

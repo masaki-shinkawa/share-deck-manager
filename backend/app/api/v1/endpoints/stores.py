@@ -8,6 +8,9 @@ from app.db.session import get_session
 from app.core.dependencies import get_current_user
 from app.models.store import Store
 from app.models.user import User
+from app.models.purchase_item import PurchaseItem
+from app.models.purchase_list import PurchaseList
+from app.models.price_entry import PriceEntry
 from app.schemas.store import StoreCreate, StoreUpdate, StorePublic
 
 router = APIRouter()
@@ -54,6 +57,26 @@ async def create_store(
     )
 
     session.add(store)
+    await session.flush()  # Get the store ID before committing
+
+    # Auto-create price entries for all existing purchase items owned by this user
+    # Join PurchaseItem with PurchaseList to filter by user_id
+    result = await session.execute(
+        select(PurchaseItem)
+        .join(PurchaseList)
+        .where(PurchaseList.user_id == user.id)
+    )
+    all_items = result.scalars().all()
+
+    # Create NULL price entries for each item
+    for item in all_items:
+        price_entry = PriceEntry(
+            item_id=item.id,
+            store_id=store.id,
+            price=None  # Out of stock by default, user will fill in later
+        )
+        session.add(price_entry)
+
     await session.commit()
     await session.refresh(store)
 

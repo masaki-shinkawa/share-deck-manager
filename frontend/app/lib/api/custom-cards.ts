@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export interface CustomCard {
   id: string;
@@ -29,7 +29,7 @@ export const customCardsApi = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_URL}/custom-cards/`, {
+    const response = await fetch(`${API_URL}/api/v1/custom-cards/`, {
       method: 'POST',
       headers,
       credentials: 'include',

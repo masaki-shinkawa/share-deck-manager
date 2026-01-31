@@ -263,3 +263,46 @@ def mock_env_vars(monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
     monkeypatch.setenv("ALLOWED_ORIGINS", "http://localhost:3000")
     return monkeypatch
+
+
+# ============================================================================
+# API Test Client Fixtures
+# ============================================================================
+
+@pytest_asyncio.fixture
+async def client(test_session: AsyncSession, test_user: User):
+    """Create test client with dependency overrides."""
+    from httpx import AsyncClient, ASGITransport
+    from app.main import app
+    from app.db.session import get_session
+    from app.core.dependencies import get_current_user
+
+    async def override_get_session():
+        return test_session
+
+    async def override_get_current_user():
+        return test_user
+
+    app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[get_current_user] = override_get_current_user
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test", follow_redirects=True) as client:
+        yield client
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def auth_headers(test_user: User):
+    """Create authentication headers for API requests."""
+    return {
+        "Authorization": "Bearer mock.jwt.token",
+        "Content-Type": "application/json"
+    }
+
+
+@pytest.fixture
+def session(test_session):
+    """Alias for test_session to match test expectations."""
+    return test_session
