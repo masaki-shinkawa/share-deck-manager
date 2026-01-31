@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime
 from uuid import UUID
+from typing import Optional
 
 from app.db.session import get_session
 from app.core.dependencies import get_current_user
 from app.models.purchase_list import PurchaseList
+from app.models.deck import Deck
 from app.models.user import User
 from app.schemas.purchase_list import PurchaseListCreate, PurchaseListUpdate, PurchaseListPublic
 
@@ -15,15 +17,29 @@ router = APIRouter()
 
 @router.get("/", response_model=list[PurchaseListPublic])
 async def list_purchase_lists(
+    deck_id: Optional[str] = Query(None, description="Filter by deck ID (use 'null' for global lists)"),
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
-    """Get all purchase lists for the current user"""
-    result = await session.execute(
-        select(PurchaseList)
-        .where(PurchaseList.user_id == user.id)
-        .order_by(PurchaseList.created_at.desc())
-    )
+    """Get all purchase lists for the current user, optionally filtered by deck_id"""
+    query = select(PurchaseList).where(PurchaseList.user_id == user.id)
+
+    # Apply deck_id filter if provided
+    if deck_id is not None:
+        if deck_id.lower() == "null":
+            # Filter for global lists (deck_id IS NULL)
+            query = query.where(PurchaseList.deck_id.is_(None))
+        else:
+            # Filter by specific deck_id
+            try:
+                deck_uuid = UUID(deck_id)
+                query = query.where(PurchaseList.deck_id == deck_uuid)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid deck_id format")
+
+    query = query.order_by(PurchaseList.created_at.desc())
+
+    result = await session.execute(query)
     lists = result.scalars().all()
     return lists
 
@@ -35,8 +51,21 @@ async def create_purchase_list(
     session: AsyncSession = Depends(get_session)
 ):
     """Create a new purchase list"""
+    # Validate deck_id if provided
+    if list_data.deck_id is not None:
+        result = await session.execute(
+            select(Deck).where(
+                Deck.id == list_data.deck_id,
+                Deck.user_id == user.id
+            )
+        )
+        deck = result.scalar_one_or_none()
+        if not deck:
+            raise HTTPException(status_code=404, detail="Deck not found or access denied")
+
     purchase_list = PurchaseList(
         user_id=user.id,
+        deck_id=list_data.deck_id,
         name=list_data.name,
         status=list_data.status.value
     )
@@ -87,6 +116,19 @@ async def update_purchase_list(
 
     if not purchase_list:
         raise HTTPException(status_code=404, detail="Purchase list not found")
+
+    # Validate deck_id if being updated
+    if list_data.deck_id is not None:
+        result = await session.execute(
+            select(Deck).where(
+                Deck.id == list_data.deck_id,
+                Deck.user_id == user.id
+            )
+        )
+        deck = result.scalar_one_or_none()
+        if not deck:
+            raise HTTPException(status_code=404, detail="Deck not found or access denied")
+        purchase_list.deck_id = list_data.deck_id
 
     if list_data.name is not None:
         purchase_list.name = list_data.name

@@ -18,6 +18,7 @@ export interface Store {
 export interface PurchaseList {
   id: string;
   user_id: string;
+  deck_id: string | null;
   name: string | null;
   status: 'planning' | 'purchased';
   created_at: string;
@@ -119,11 +120,17 @@ export const storesApi = {
 
 // Purchase List API
 export const purchaseListsApi = {
-  list: (token?: string) => apiCall<PurchaseList[]>('/api/v1/purchases', {}, token),
+  list: (deckId?: string | null, token?: string) => {
+    const queryParams = deckId !== undefined
+      ? `?deck_id=${deckId === null ? 'null' : deckId}`
+      : '';
+    return apiCall<PurchaseList[]>(`/api/v1/purchases${queryParams}`, {}, token);
+  },
 
   get: (listId: string, token?: string) => apiCall<PurchaseList>(`/api/v1/purchases/${listId}`, {}, token),
 
   create: (data: {
+    deck_id?: string | null;
     name?: string | null;
     status?: 'planning' | 'purchased';
   }, token?: string) =>
@@ -133,6 +140,7 @@ export const purchaseListsApi = {
     }, token),
 
   update: (listId: string, data: {
+    deck_id?: string | null;
     name?: string | null;
     status?: 'planning' | 'purchased';
   }, token?: string) =>

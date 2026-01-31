@@ -9,6 +9,10 @@ from app.models.purchase_list import PurchaseStatus
 
 class PurchaseListCreate(SQLModel):
     """購入リスト作成スキーマ"""
+    deck_id: Optional[UUID] = Field(
+        default=None,
+        description="Deck ID to associate with this purchase list (optional)"
+    )
     name: Optional[str] = Field(
         default=None,
         max_length=100,
@@ -32,6 +36,10 @@ class PurchaseListCreate(SQLModel):
 
 class PurchaseListUpdate(SQLModel):
     """購入リスト更新スキーマ"""
+    deck_id: Optional[UUID] = Field(
+        default=None,
+        description="Deck ID to associate with this purchase list"
+    )
     name: Optional[str] = Field(
         default=None,
         max_length=100,
@@ -57,6 +65,7 @@ class PurchaseListPublic(SQLModel):
     """購入リスト公開スキーマ"""
     id: UUID
     user_id: UUID
+    deck_id: Optional[UUID]
     name: Optional[str]
     status: str
     created_at: datetime
