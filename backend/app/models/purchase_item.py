@@ -28,8 +28,7 @@ class PurchaseItem(SQLModel, table=True):
     list_id: UUID = Field(foreign_key="purchase_lists.id", nullable=False, index=True, ondelete="CASCADE")
     card_id: Optional[UUID] = Field(default=None, foreign_key="cards.id", nullable=True, ondelete="SET NULL")
     custom_card_id: Optional[UUID] = Field(default=None, foreign_key="custom_cards.id", nullable=True, ondelete="SET NULL")
-    quantity: int = Field(nullable=False, ge=1, le=10)  # 1-10枚
-    selected_store_id: Optional[UUID] = Field(default=None, foreign_key="stores.id", nullable=True, ondelete="SET NULL")
+    quantity: int = Field(nullable=False, ge=1, le=10)  # 必要な総枚数
     created_at: datetime = Field(default_factory=get_utc_now, nullable=False)
 
     # Relationships

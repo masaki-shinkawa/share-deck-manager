@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     stores,
     purchase_lists,
     purchase_items,
+    purchase_allocations,
     prices,
 )
 
@@ -27,4 +28,5 @@ api_router.include_router(custom_cards.router, prefix="/custom-cards", tags=["cu
 api_router.include_router(stores.router, prefix="/stores", tags=["stores"])
 api_router.include_router(purchase_lists.router, prefix="/purchases", tags=["purchases"])
 api_router.include_router(purchase_items.router, prefix="/purchases", tags=["purchase-items"])
+api_router.include_router(purchase_allocations.router, prefix="/purchases", tags=["purchase-allocations"])
 api_router.include_router(prices.router, prefix="/purchases/items", tags=["prices"])

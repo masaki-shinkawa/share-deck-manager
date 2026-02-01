@@ -9,12 +9,20 @@ export interface Price {
   price: number | null;
 }
 
+export interface Allocation {
+  id: string;
+  storeId: string;
+  storeName: string;
+  storeColor: string;
+  quantity: number;
+}
+
 export interface CardItem {
   id: string;
   name: string;
   quantity: number;
   prices: Price[];
-  purchaseStoreId: string | null;
+  allocations: Allocation[];
 }
 
 export interface OptimalPurchasePlan {

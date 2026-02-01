@@ -30,8 +30,15 @@ export interface PurchaseItem {
   card_id: string | null;
   custom_card_id: string | null;
   quantity: number;
-  selected_store_id: string | null;
   created_at: string;
+}
+
+export interface AllocationInfo {
+  id: string;
+  store_id: string;
+  store_name: string;
+  store_color: string;
+  quantity: number;
 }
 
 export interface PurchaseItemWithCard extends PurchaseItem {
@@ -39,6 +46,7 @@ export interface PurchaseItemWithCard extends PurchaseItem {
   card_color: string | null;
   card_image_path: string | null;
   price_entries?: PriceEntry[];
+  allocations: AllocationInfo[];
 }
 
 export interface PriceEntry {
@@ -162,7 +170,6 @@ export const purchaseItemsApi = {
     card_id?: string | null;
     custom_card_id?: string | null;
     quantity: number;
-    selected_store_id?: string | null;
   }, token?: string) =>
     apiCall<PurchaseItem>(`/api/v1/purchases/${listId}/items`, {
       method: 'POST',
@@ -171,7 +178,6 @@ export const purchaseItemsApi = {
 
   update: (listId: string, itemId: string, data: {
     quantity?: number;
-    selected_store_id?: string | null;
   }, token?: string) =>
     apiCall<PurchaseItem>(`/api/v1/purchases/${listId}/items/${itemId}`, {
       method: 'PATCH',
@@ -180,6 +186,29 @@ export const purchaseItemsApi = {
 
   delete: (listId: string, itemId: string, token?: string) =>
     apiCall<void>(`/api/v1/purchases/${listId}/items/${itemId}`, {
+      method: 'DELETE',
+    }, token),
+};
+
+// Allocation API
+export const allocationsApi = {
+  list: (itemId: string, token?: string) =>
+    apiCall<AllocationInfo[]>(`/api/v1/purchases/items/${itemId}/allocations`, {}, token),
+
+  create: (itemId: string, data: { store_id: string; quantity: number }, token?: string) =>
+    apiCall<AllocationInfo>(`/api/v1/purchases/items/${itemId}/allocations`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }, token),
+
+  update: (allocationId: string, data: { quantity: number }, token?: string) =>
+    apiCall<AllocationInfo>(`/api/v1/purchases/allocations/${allocationId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }, token),
+
+  delete: (allocationId: string, token?: string) =>
+    apiCall<void>(`/api/v1/purchases/allocations/${allocationId}`, {
       method: 'DELETE',
     }, token),
 };

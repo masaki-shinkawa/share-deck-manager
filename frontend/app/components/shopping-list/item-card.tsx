@@ -6,26 +6,26 @@ import type { CardItem, Store } from '@/app/lib/types';
 interface ItemCardProps {
   item: CardItem;
   stores: Store[];
-  onSelectStore: (itemId: string, storeId: string | null) => void;
   onUpdatePrice: (itemId: string, storeId: string, price: number | null) => void;
   onUpdateQuantity: (itemId: string, quantity: number) => void;
+  onAddAllocation: (itemId: string, storeId: string, quantity: number) => void;
+  onUpdateAllocation: (allocationId: string, quantity: number) => void;
+  onDeleteAllocation: (allocationId: string) => void;
   onDelete: (itemId: string) => void;
 }
 
 export function ItemCard({
   item,
   stores,
-  onSelectStore,
   onUpdatePrice,
   onUpdateQuantity,
+  onAddAllocation,
+  onUpdateAllocation,
+  onDeleteAllocation,
   onDelete,
 }: ItemCardProps) {
   const [isEditing, setIsEditing] = useState(false);
-  // Local state for price editing (not saved until "完了" button is clicked)
   const [localPrices, setLocalPrices] = useState<Record<string, number | null>>({});
-
-  const selectedStore = stores.find((s) => s.id === item.purchaseStoreId);
-  const selectedPrice = item.prices.find((p) => p.storeId === item.purchaseStoreId);
 
   // Handle entering edit mode - initialize local prices
   const handleStartEditing = () => {
@@ -39,12 +39,10 @@ export function ItemCard({
 
   // Handle finishing edit mode - save all changed prices
   const handleFinishEditing = async () => {
-    // Save all changed prices to the server
     const updatePromises: Promise<void>[] = [];
 
     Object.entries(localPrices).forEach(([storeId, price]) => {
       const originalPrice = item.prices.find((p) => p.storeId === storeId)?.price;
-      // Only update if the price has changed
       if (price !== originalPrice) {
         updatePromises.push(
           Promise.resolve(onUpdatePrice(item.id, storeId, price))
@@ -52,11 +50,18 @@ export function ItemCard({
       }
     });
 
-    // Wait for all updates to complete
     await Promise.all(updatePromises);
-
     setIsEditing(false);
   };
+
+  // Calculate remaining quantity
+  const allocatedTotal = item.allocations.reduce((sum, alloc) => sum + alloc.quantity, 0);
+  const remainingQuantity = item.quantity - allocatedTotal;
+
+  // Get available stores (not yet allocated)
+  const availableStores = stores.filter(
+    (store) => !item.allocations.some((alloc) => alloc.storeId === store.id)
+  );
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
@@ -65,7 +70,7 @@ export function ItemCard({
         <div className="flex-1">
           <h3 className="font-medium text-lg text-white">{item.name}</h3>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-sm text-gray-400">数量:</span>
+            <span className="text-sm text-gray-400">必要枚数:</span>
             <input
               type="number"
               min="1"
@@ -74,6 +79,16 @@ export function ItemCard({
               onChange={(e) => onUpdateQuantity(item.id, parseInt(e.target.value) || 1)}
               className="w-16 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm"
             />
+            {remainingQuantity > 0 && (
+              <span className="text-sm text-yellow-400">
+                (残り {remainingQuantity}枚)
+              </span>
+            )}
+            {remainingQuantity < 0 && (
+              <span className="text-sm text-red-400">
+                (超過 {Math.abs(remainingQuantity)}枚)
+              </span>
+            )}
           </div>
         </div>
         <div className="flex gap-2">
@@ -92,45 +107,9 @@ export function ItemCard({
         </div>
       </div>
 
-      {/* Store Selection */}
-      {!isEditing && (
-        <div className="space-y-2">
-          <label className="text-sm text-gray-400">購入先:</label>
-          <select
-            value={item.purchaseStoreId || ''}
-            onChange={(e) => onSelectStore(item.id, e.target.value || null)}
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
-          >
-            <option value="">選択してください</option>
-            {stores.map((store) => {
-              const price = item.prices.find((p) => p.storeId === store.id);
-              const priceText =
-                price?.price !== null && price?.price !== undefined
-                  ? `¥${price.price.toLocaleString()}`
-                  : '在庫なし';
-              return (
-                <option key={store.id} value={store.id} disabled={price?.price === null}>
-                  {store.name} - {priceText}
-                </option>
-              );
-            })}
-          </select>
-          {selectedStore && selectedPrice && selectedPrice.price !== null && (
-            <div className="flex justify-between items-center p-2 bg-gray-700 rounded">
-              <span className="text-sm" style={{ color: selectedStore.color }}>
-                {selectedStore.name}
-              </span>
-              <span className="font-medium text-white">
-                ¥{(selectedPrice.price * item.quantity).toLocaleString()}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Price Editing */}
+      {/* Price Editing Mode */}
       {isEditing && (
-        <div className="space-y-2">
+        <div className="space-y-2 border-t border-gray-700 pt-3">
           <label className="text-sm text-gray-400">各ショップの価格:</label>
           {stores.map((store) => {
             const localPrice = localPrices[store.id];
@@ -158,6 +137,86 @@ export function ItemCard({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Allocations Display (Normal Mode) */}
+      {!isEditing && (
+        <div className="space-y-2 border-t border-gray-700 pt-3">
+          <label className="text-sm text-gray-400">購入先:</label>
+          {item.allocations.length === 0 ? (
+            <p className="text-sm text-gray-500">購入先が未設定です</p>
+          ) : (
+            <div className="space-y-2">
+              {item.allocations.map((alloc) => {
+                const price = item.prices.find((p) => p.storeId === alloc.storeId);
+                const pricePerUnit = price?.price ?? null;
+                const subtotal = pricePerUnit !== null ? pricePerUnit * alloc.quantity : null;
+
+                return (
+                  <div key={alloc.id} className="flex items-center gap-2 bg-gray-700 p-2 rounded">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: alloc.storeColor }}
+                    ></div>
+                    <span className="text-sm text-white flex-1">{alloc.storeName}</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max={item.quantity}
+                      value={alloc.quantity}
+                      onChange={(e) => onUpdateAllocation(alloc.id, parseInt(e.target.value) || 1)}
+                      className="w-12 px-1 py-1 bg-gray-600 border border-gray-500 rounded text-white text-sm text-center"
+                    />
+                    <span className="text-sm text-white min-w-[60px] text-right">
+                      {subtotal !== null ? `¥${subtotal}` : '－'}
+                    </span>
+                    <button
+                      onClick={() => onDeleteAllocation(alloc.id)}
+                      className="text-red-400 hover:text-red-300 text-sm"
+                      title="削除"
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Add Allocation */}
+          {availableStores.length > 0 && remainingQuantity > 0 && (
+            <div className="flex items-center gap-2">
+              <select
+                className="flex-1 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const quantity = Math.min(remainingQuantity, 1);
+                    onAddAllocation(item.id, e.target.value, quantity);
+                    e.target.value = ''; // Reset selection
+                  }
+                }}
+              >
+                <option value="">+ 購入先を追加</option>
+                {availableStores.map((store) => {
+                  const price = item.prices.find((p) => p.storeId === store.id);
+                  const priceText =
+                    price?.price !== null && price?.price !== undefined
+                      ? `¥${price.price}`
+                      : '在庫なし';
+                  return (
+                    <option
+                      key={store.id}
+                      value={store.id}
+                      disabled={price?.price === null}
+                    >
+                      {store.name} - {priceText}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
         </div>
       )}
     </div>

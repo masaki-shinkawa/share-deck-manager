@@ -7,6 +7,7 @@ import {
   storesApi,
   purchaseListsApi,
   purchaseItemsApi,
+  allocationsApi,
   pricesApi,
   optimalPlanApi,
   type Store as ApiStore,
@@ -64,7 +65,13 @@ export default function PurchasePage() {
           price: priceEntry?.price ?? null,
         };
       }),
-      purchaseStoreId: apiItem.selected_store_id,
+      allocations: (apiItem.allocations || []).map((alloc) => ({
+        id: alloc.id,
+        storeId: alloc.store_id,
+        storeName: alloc.store_name,
+        storeColor: alloc.store_color,
+        quantity: alloc.quantity,
+      })),
     }));
   };
 
@@ -170,25 +177,39 @@ export default function PurchasePage() {
     }
   }
 
-  // Select store for item
-  async function handleSelectStore(itemId: string, storeId: string | null) {
+  // Add allocation
+  async function handleAddAllocation(itemId: string, storeId: string, quantity: number) {
     if (!idToken) return;
-    if (!purchaseList) return;
 
     try {
-      await purchaseItemsApi.update(
-        purchaseList.id,
-        itemId,
-        { selected_store_id: storeId },
-        idToken
-      );
-      // Update local state immediately for better UX
-      setItems((prev) =>
-        prev.map((item) => (item.id === itemId ? { ...item, purchaseStoreId: storeId } : item))
-      );
+      await allocationsApi.create(itemId, { store_id: storeId, quantity }, idToken);
+      await loadData();
     } catch (err) {
-      alert('Failed to select store: ' + (err instanceof Error ? err.message : 'Unknown error'));
-      await loadData(); // Reload on error
+      alert('Failed to add allocation: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    }
+  }
+
+  // Update allocation quantity
+  async function handleUpdateAllocation(allocationId: string, quantity: number) {
+    if (!idToken) return;
+
+    try {
+      await allocationsApi.update(allocationId, { quantity }, idToken);
+      await loadData();
+    } catch (err) {
+      alert('Failed to update allocation: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    }
+  }
+
+  // Delete allocation
+  async function handleDeleteAllocation(allocationId: string) {
+    if (!idToken) return;
+
+    try {
+      await allocationsApi.delete(allocationId, idToken);
+      await loadData();
+    } catch (err) {
+      alert('Failed to delete allocation: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
   }
 
@@ -293,7 +314,7 @@ export default function PurchasePage() {
     setOptimalStoreTotals(storeTotalsArray);
   }
 
-  const selectedCount = items.filter((item) => item.purchaseStoreId !== null).length;
+  const selectedCount = items.filter((item) => item.allocations.length > 0).length;
 
   // Show loading state while authenticating or loading data
   if (status === 'loading' || (isReady && loading)) {
@@ -352,9 +373,11 @@ export default function PurchasePage() {
                 key={item.id}
                 item={item}
                 stores={stores}
-                onSelectStore={handleSelectStore}
                 onUpdatePrice={handleUpdatePrice}
                 onUpdateQuantity={handleUpdateQuantity}
+                onAddAllocation={handleAddAllocation}
+                onUpdateAllocation={handleUpdateAllocation}
+                onDeleteAllocation={handleDeleteAllocation}
                 onDelete={handleDeleteItem}
               />
             ))}

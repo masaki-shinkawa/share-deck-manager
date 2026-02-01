@@ -7,6 +7,7 @@ from app.db.session import get_session
 from app.core.dependencies import get_current_user
 from app.models.purchase_item import PurchaseItem
 from app.models.purchase_list import PurchaseList
+from app.models.purchase_allocation import PurchaseAllocation
 from app.models.card import Card
 from app.models.custom_card import CustomCard
 from app.models.store import Store
@@ -16,7 +17,8 @@ from app.schemas.purchase_item import (
     PurchaseItemCreate,
     PurchaseItemUpdate,
     PurchaseItemPublic,
-    PurchaseItemWithCard
+    PurchaseItemWithCard,
+    AllocationInfo
 )
 
 router = APIRouter()
@@ -63,18 +65,35 @@ async def list_purchase_items(
         )
         price_entries = price_result.scalars().all()
 
+        # Load allocations for this item
+        allocations_result = await session.execute(
+            select(PurchaseAllocation, Store)
+            .where(PurchaseAllocation.item_id == item.id)
+            .join(Store, PurchaseAllocation.store_id == Store.id)
+            .order_by(PurchaseAllocation.created_at)
+        )
+        allocations = []
+        for allocation, store in allocations_result.all():
+            allocations.append(AllocationInfo(
+                id=allocation.id,
+                store_id=allocation.store_id,
+                store_name=store.name,
+                store_color=store.color,
+                quantity=allocation.quantity
+            ))
+
         items_with_cards.append(PurchaseItemWithCard(
             id=item.id,
             list_id=item.list_id,
             card_id=item.card_id,
             custom_card_id=item.custom_card_id,
             quantity=item.quantity,
-            selected_store_id=item.selected_store_id,
             created_at=item.created_at,
             card_name=card_name,
             card_color=card_color,
             card_image_path=card_image_path,
-            price_entries=price_entries
+            price_entries=price_entries,
+            allocations=allocations
         ))
 
     return items_with_cards
@@ -119,24 +138,11 @@ async def create_purchase_item(
         if not custom_card:
             raise HTTPException(status_code=404, detail="Custom card not found")
 
-    # Verify selected store belongs to user if provided
-    if item_data.selected_store_id:
-        result = await session.execute(
-            select(Store).where(
-                Store.id == item_data.selected_store_id,
-                Store.user_id == user.id
-            )
-        )
-        store = result.scalar_one_or_none()
-        if not store:
-            raise HTTPException(status_code=404, detail="Store not found")
-
     purchase_item = PurchaseItem(
         list_id=list_id,
         card_id=item_data.card_id,
         custom_card_id=item_data.custom_card_id,
-        quantity=item_data.quantity,
-        selected_store_id=item_data.selected_store_id
+        quantity=item_data.quantity
     )
 
     session.add(purchase_item)
@@ -194,19 +200,7 @@ async def update_purchase_item(
     if not item:
         raise HTTPException(status_code=404, detail="Purchase item not found")
 
-    # Verify selected store belongs to user if being updated
-    if item_data.selected_store_id is not None:
-        result = await session.execute(
-            select(Store).where(
-                Store.id == item_data.selected_store_id,
-                Store.user_id == user.id
-            )
-        )
-        store = result.scalar_one_or_none()
-        if not store:
-            raise HTTPException(status_code=404, detail="Store not found")
-        item.selected_store_id = item_data.selected_store_id
-
+    # Update quantity if provided
     if item_data.quantity is not None:
         item.quantity = item_data.quantity
 
