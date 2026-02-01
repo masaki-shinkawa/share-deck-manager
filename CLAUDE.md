@@ -9,6 +9,9 @@
 - 実際のカード内容は外部システム（実物カード、別アプリ等）で管理する想定
 - デッキレシピへの外部リンク機能
 
+**ドキュメント:**
+- [認証アーキテクチャ](docs/AUTHENTICATION.md) - Google OAuth 2.0とJWT認証の詳細設計
+
 ## 技術スタック選定
 
 ### フロントエンド
@@ -1340,10 +1343,10 @@ railway logs --service Postgres --environment production
 ```sql
 - id: UUID (PK)
 - user_id: UUID (FK → users.id ON DELETE CASCADE)
-- deck_id: UUID (FK → decks.id ON DELETE SET NULL, 任意)
 - name: TEXT (max 100文字, 任意)
 - status: TEXT ('planning' | 'purchased')
 - created_at, updated_at: TIMESTAMP
+※ グローバル購入リスト（デッキには紐付かない）
 ```
 
 **purchase_items（購入アイテム）**
@@ -1382,8 +1385,8 @@ FastAPI RESTful エンドポイントを実装：
 - `DELETE /api/v1/stores/{store_id}` - ストア削除
 
 **Purchase List Management**
-- `GET /api/v1/purchases` - 購入リスト一覧取得
-- `POST /api/v1/purchases` - 購入リスト作成
+- `GET /api/v1/purchases` - 購入リスト一覧取得（ユーザーの全リスト）
+- `POST /api/v1/purchases` - 購入リスト作成（グローバルリスト）
 - `GET /api/v1/purchases/{list_id}` - 購入リスト詳細取得
 - `PATCH /api/v1/purchases/{list_id}` - 購入リスト更新
 - `DELETE /api/v1/purchases/{list_id}` - 購入リスト削除
@@ -1434,8 +1437,8 @@ Next.js App Routerで実装：
 - エラーハンドリング
 - NextAuth Cookie認証統合
 
-**Purchase Page (`/decks/[id]/purchase`)**
-- デッキごとの購入リスト自動作成
+**Purchase Page (`/purchase`)**
+- グローバル購入リスト管理
 - ストア管理（CRUD）
 - 購入アイテム表示
 - 最適購入プラン計算・表示
@@ -1463,7 +1466,7 @@ Next.js App Routerで実装：
 │                                              │
 │  ┌────────────────────────────────────┐    │
 │  │  Next.js Frontend                  │    │
-│  │  - /decks/[id]/purchase           │    │
+│  │  - /purchase                       │    │
 │  │  - Purchase API Client             │    │
 │  └──────────┬─────────────────────────┘    │
 │             │                                │
@@ -1550,7 +1553,7 @@ Next.js App Routerで実装：
 
 ### Issue #10: Frontend Integration ✅
 - TypeScript API Client実装
-- Purchase Page実装 (/decks/[id]/purchase)
+- Purchase Page実装 (/purchase)
 - 基本的なCRUD操作対応
 - 最適プラン表示機能実装
 

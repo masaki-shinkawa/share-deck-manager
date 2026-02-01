@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/app/hooks/useAuth';
 import {
   storesApi,
   purchaseListsApi,
@@ -25,7 +25,7 @@ import { TotalSummary } from '@/app/components/shopping-list/total-summary';
 
 export default function PurchasePage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { session, status, isReady, error: authError, idToken } = useAuth();
 
   const [stores, setStores] = useState<Store[]>([]);
   const [purchaseList, setPurchaseList] = useState<PurchaseList | null>(null);
@@ -34,14 +34,12 @@ export default function PurchasePage() {
   const [error, setError] = useState<string | null>(null);
   const [showAddStore, setShowAddStore] = useState(false);
 
-  // Load data
+  // Load data when authenticated
   useEffect(() => {
-    if (status === 'authenticated' && session?.idToken) {
+    if (isReady) {
       loadData();
-    } else if (status === 'unauthenticated') {
-      router.push('/login');
     }
-  }, [status, session]);
+  }, [isReady]);
 
   // Convert API data to UI format
   const convertToCardItems = (
@@ -72,9 +70,9 @@ export default function PurchasePage() {
   };
 
   async function loadData() {
-    const token = session?.idToken;
-    if (!token) {
-      setError('Not authenticated');
+    if (!idToken) {
+      setError('認証トークンが見つかりません');
+      setLoading(false);
       return;
     }
 
@@ -83,21 +81,22 @@ export default function PurchasePage() {
       setError(null);
 
       // Load stores
-      const storesData = await storesApi.list(token);
+      const storesData = await storesApi.list(idToken);
       setStores(convertToStores(storesData));
 
       // Get or create default purchase list
-      const lists = await purchaseListsApi.list(token);
+      const lists = await purchaseListsApi.list(idToken);
       let list = lists.find((l) => l.name === null || l.name === 'Default');
 
       if (!list) {
-        list = await purchaseListsApi.create({ status: 'planning' }, token);
+        // Create a new default purchase list
+        list = await purchaseListsApi.create({ status: 'planning' }, idToken);
       }
 
       setPurchaseList(list);
 
       // Load items
-      const itemsData = await purchaseItemsApi.list(list.id, token);
+      const itemsData = await purchaseItemsApi.list(list.id, idToken);
       setItems(convertToCardItems(itemsData, storesData));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -109,11 +108,11 @@ export default function PurchasePage() {
 
   // Add store
   async function handleAddStore(name: string, color: string) {
-    const token = session?.idToken;
-    if (!token) return;
+    if (!idToken) return;
+    // Already checked idToken above
 
     try {
-      await storesApi.create({ name, color }, token);
+      await storesApi.create({ name, color }, idToken);
       await loadData();
     } catch (err) {
       alert('Failed to add store: ' + (err instanceof Error ? err.message : 'Unknown error'));
@@ -122,13 +121,13 @@ export default function PurchasePage() {
 
   // Remove store
   async function handleRemoveStore(storeId: string) {
-    const token = session?.idToken;
-    if (!token || stores.length <= 1) return;
+    if (!idToken) return;
+    if (stores.length <= 1) return;
 
     if (!confirm('このショップを削除しますか？')) return;
 
     try {
-      await storesApi.delete(storeId, token);
+      await storesApi.delete(storeId, idToken);
       await loadData();
     } catch (err) {
       alert('Failed to remove store: ' + (err instanceof Error ? err.message : 'Unknown error'));
@@ -137,14 +136,14 @@ export default function PurchasePage() {
 
   // Add item
   async function handleAddItem(name: string, quantity: number) {
-    const token = session?.idToken;
-    if (!token || !purchaseList) return;
+    if (!idToken) return;
+    if (!purchaseList) return;
 
     try {
       // Create custom card first
       const customCard = await customCardsApi.create(
         { name, color1: '赤' }, // Default color
-        token
+        idToken
       );
 
       // Create purchase item with the new custom_card_id
@@ -154,7 +153,7 @@ export default function PurchasePage() {
           custom_card_id: customCard.id,
           quantity,
         },
-        token
+        idToken
       );
 
       await loadData();
@@ -165,15 +164,15 @@ export default function PurchasePage() {
 
   // Select store for item
   async function handleSelectStore(itemId: string, storeId: string | null) {
-    const token = session?.idToken;
-    if (!token || !purchaseList) return;
+    if (!idToken) return;
+    if (!purchaseList) return;
 
     try {
       await purchaseItemsApi.update(
         purchaseList.id,
         itemId,
         { selected_store_id: storeId },
-        token
+        idToken
       );
       // Update local state immediately for better UX
       setItems((prev) =>
@@ -187,11 +186,11 @@ export default function PurchasePage() {
 
   // Update price
   async function handleUpdatePrice(itemId: string, storeId: string, price: number | null) {
-    const token = session?.idToken;
-    if (!token) return;
+    if (!idToken) return;
+    // Already checked idToken above
 
     try {
-      await pricesApi.update(itemId, storeId, { price }, token);
+      await pricesApi.update(itemId, storeId, { price }, idToken);
       // Update local state
       setItems((prev) =>
         prev.map((item) => {
@@ -212,11 +211,11 @@ export default function PurchasePage() {
 
   // Update quantity
   async function handleUpdateQuantity(itemId: string, quantity: number) {
-    const token = session?.idToken;
-    if (!token || !purchaseList) return;
+    if (!idToken) return;
+    if (!purchaseList) return;
 
     try {
-      await purchaseItemsApi.update(purchaseList.id, itemId, { quantity }, token);
+      await purchaseItemsApi.update(purchaseList.id, itemId, { quantity }, idToken);
       // Update local state
       setItems((prev) =>
         prev.map((item) => (item.id === itemId ? { ...item, quantity } : item))
@@ -229,13 +228,13 @@ export default function PurchasePage() {
 
   // Delete item
   async function handleDeleteItem(itemId: string) {
-    const token = session?.idToken;
-    if (!token || !purchaseList) return;
+    if (!idToken) return;
+    if (!purchaseList) return;
 
     if (!confirm('このアイテムを削除しますか？')) return;
 
     try {
-      await purchaseItemsApi.delete(purchaseList.id, itemId, token);
+      await purchaseItemsApi.delete(purchaseList.id, itemId, idToken);
       setItems((prev) => prev.filter((item) => item.id !== itemId));
     } catch (err) {
       alert('Failed to delete item: ' + (err instanceof Error ? err.message : 'Unknown error'));
@@ -245,8 +244,8 @@ export default function PurchasePage() {
 
   // Apply optimal plan
   async function handleApplyOptimal(optimal: OptimalPurchase) {
-    const token = session?.idToken;
-    if (!token || !purchaseList) return;
+    if (!idToken) return;
+    if (!purchaseList) return;
 
     try {
       // Update each item's selected store
@@ -256,7 +255,7 @@ export default function PurchasePage() {
             purchaseList.id,
             cardId,
             { selected_store_id: plan.storeId },
-            token
+            idToken
           );
         }
       }
@@ -269,7 +268,8 @@ export default function PurchasePage() {
 
   const selectedCount = items.filter((item) => item.purchaseStoreId !== null).length;
 
-  if (status === 'loading' || loading) {
+  // Show loading state while authenticating or loading data
+  if (status === 'loading' || (isReady && loading)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
         <div className="text-center">
@@ -279,11 +279,12 @@ export default function PurchasePage() {
     );
   }
 
-  if (error) {
+  // Show error state for authentication or data loading errors
+  if (authError || error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
         <div className="text-center">
-          <div className="text-lg font-medium text-red-600">エラー: {error}</div>
+          <div className="text-lg font-medium text-red-600">エラー: {authError || error}</div>
           <button
             onClick={() => router.push('/')}
             className="mt-4 px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700"
@@ -293,6 +294,11 @@ export default function PurchasePage() {
         </div>
       </div>
     );
+  }
+
+  // Don't render until authentication is ready
+  if (!isReady) {
+    return null;
   }
 
   return (
