@@ -22,11 +22,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema: Drop deck_id column from purchase_lists."""
-    # Drop the foreign key constraint first
-    op.drop_constraint('purchase_lists_deck_id_fkey', 'purchase_lists', type_='foreignkey')
-
-    # Drop the index
+    # Drop the index first
     op.drop_index('ix_purchase_lists_deck_id', table_name='purchase_lists')
+
+    # Drop the foreign key constraint (using correct constraint name from c68bc819d256)
+    op.drop_constraint('fk_purchase_lists_deck_id_decks', 'purchase_lists', type_='foreignkey')
 
     # Drop the column
     op.drop_column('purchase_lists', 'deck_id')
@@ -39,13 +39,13 @@ def downgrade() -> None:
         sa.Column('deck_id', sa.UUID(), nullable=True)
     )
 
-    # Recreate the index
-    op.create_index('ix_purchase_lists_deck_id', 'purchase_lists', ['deck_id'])
-
-    # Recreate the foreign key constraint
+    # Recreate the foreign key constraint (using same name as c68bc819d256)
     op.create_foreign_key(
-        'purchase_lists_deck_id_fkey',
+        'fk_purchase_lists_deck_id_decks',
         'purchase_lists', 'decks',
         ['deck_id'], ['id'],
         ondelete='SET NULL'
     )
+
+    # Recreate the index
+    op.create_index('ix_purchase_lists_deck_id', 'purchase_lists', ['deck_id'])

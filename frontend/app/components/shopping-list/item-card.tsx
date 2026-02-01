@@ -21,9 +21,42 @@ export function ItemCard({
   onDelete,
 }: ItemCardProps) {
   const [isEditing, setIsEditing] = useState(false);
+  // Local state for price editing (not saved until "完了" button is clicked)
+  const [localPrices, setLocalPrices] = useState<Record<string, number | null>>({});
 
   const selectedStore = stores.find((s) => s.id === item.purchaseStoreId);
   const selectedPrice = item.prices.find((p) => p.storeId === item.purchaseStoreId);
+
+  // Handle entering edit mode - initialize local prices
+  const handleStartEditing = () => {
+    const pricesMap: Record<string, number | null> = {};
+    item.prices.forEach((p) => {
+      pricesMap[p.storeId] = p.price;
+    });
+    setLocalPrices(pricesMap);
+    setIsEditing(true);
+  };
+
+  // Handle finishing edit mode - save all changed prices
+  const handleFinishEditing = async () => {
+    // Save all changed prices to the server
+    const updatePromises: Promise<void>[] = [];
+
+    Object.entries(localPrices).forEach(([storeId, price]) => {
+      const originalPrice = item.prices.find((p) => p.storeId === storeId)?.price;
+      // Only update if the price has changed
+      if (price !== originalPrice) {
+        updatePromises.push(
+          Promise.resolve(onUpdatePrice(item.id, storeId, price))
+        );
+      }
+    });
+
+    // Wait for all updates to complete
+    await Promise.all(updatePromises);
+
+    setIsEditing(false);
+  };
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
@@ -45,7 +78,7 @@ export function ItemCard({
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setIsEditing(!isEditing)}
+            onClick={isEditing ? handleFinishEditing : handleStartEditing}
             className="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors text-sm"
           >
             {isEditing ? '完了' : '価格編集'}
@@ -100,7 +133,7 @@ export function ItemCard({
         <div className="space-y-2">
           <label className="text-sm text-gray-400">各ショップの価格:</label>
           {stores.map((store) => {
-            const price = item.prices.find((p) => p.storeId === store.id);
+            const localPrice = localPrices[store.id];
             return (
               <div key={store.id} className="flex items-center gap-2">
                 <div
@@ -112,13 +145,12 @@ export function ItemCard({
                   type="number"
                   min="0"
                   placeholder="在庫なし"
-                  value={price?.price ?? ''}
+                  value={localPrice ?? ''}
                   onChange={(e) =>
-                    onUpdatePrice(
-                      item.id,
-                      store.id,
-                      e.target.value ? parseInt(e.target.value) : null
-                    )
+                    setLocalPrices({
+                      ...localPrices,
+                      [store.id]: e.target.value ? parseInt(e.target.value) : null,
+                    })
                   }
                   className="w-24 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm"
                 />

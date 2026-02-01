@@ -22,10 +22,21 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Remove deck_id from purchase_lists table
-    op.drop_index(op.f('ix_purchase_lists_deck_id'), table_name='purchase_lists')
-    op.drop_constraint('purchase_lists_deck_id_fkey', 'purchase_lists', type_='foreignkey')
-    op.drop_column('purchase_lists', 'deck_id')
+    # Remove deck_id from purchase_lists table (if exists)
+    try:
+        op.drop_index(op.f('ix_purchase_lists_deck_id'), table_name='purchase_lists')
+    except Exception:
+        pass  # Index doesn't exist, ignore
+
+    try:
+        op.drop_constraint('purchase_lists_deck_id_fkey', 'purchase_lists', type_='foreignkey')
+    except Exception:
+        pass  # Constraint doesn't exist, ignore
+
+    try:
+        op.drop_column('purchase_lists', 'deck_id')
+    except Exception:
+        pass  # Column doesn't exist, ignore
 
 
 def downgrade() -> None:

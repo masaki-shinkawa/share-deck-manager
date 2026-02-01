@@ -15,7 +15,7 @@ import {
   type OptimalPurchasePlan,
 } from '@/app/lib/api/purchases';
 import { customCardsApi } from '@/app/lib/api/custom-cards';
-import type { CardItem, Store, OptimalPurchase } from '@/app/lib/types';
+import type { CardItem, Store } from '@/app/lib/types';
 import { Header } from '@/app/components/shopping-list/header';
 import { StoreTabs } from '@/app/components/shopping-list/store-tabs';
 import { ItemCard } from '@/app/components/shopping-list/item-card';
@@ -33,6 +33,8 @@ export default function PurchasePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddStore, setShowAddStore] = useState(false);
+  const [optimalTotal, setOptimalTotal] = useState(0);
+  const [optimalStoreTotals, setOptimalStoreTotals] = useState<{ store: Store; total: number }[]>([]);
 
   // Load data when authenticated
   useEffect(() => {
@@ -40,6 +42,11 @@ export default function PurchasePage() {
       loadData();
     }
   }, [isReady]);
+
+  // Calculate optimal plan automatically whenever items or stores change
+  useEffect(() => {
+    calculateOptimalPlan();
+  }, [items, stores]);
 
   // Convert API data to UI format
   const convertToCardItems = (
@@ -51,7 +58,7 @@ export default function PurchasePage() {
       name: apiItem.card_name || '不明なカード',
       quantity: apiItem.quantity,
       prices: apiStores.map((store) => {
-        const priceEntry = apiItem.prices?.find((p) => p.store_id === store.id);
+        const priceEntry = apiItem.price_entries?.find((p) => p.store_id === store.id);
         return {
           storeId: store.id,
           price: priceEntry?.price ?? null,
@@ -97,6 +104,7 @@ export default function PurchasePage() {
 
       // Load items
       const itemsData = await purchaseItemsApi.list(list.id, idToken);
+      console.log('[Load Data] Loaded items with prices:', itemsData);
       setItems(convertToCardItems(itemsData, storesData));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -190,7 +198,10 @@ export default function PurchasePage() {
     // Already checked idToken above
 
     try {
+      console.log('[Price Update] Sending to API:', { itemId, storeId, price });
       await pricesApi.update(itemId, storeId, { price }, idToken);
+      console.log('[Price Update] Successfully saved to database');
+
       // Update local state
       setItems((prev) =>
         prev.map((item) => {
@@ -204,6 +215,7 @@ export default function PurchasePage() {
         })
       );
     } catch (err) {
+      console.error('[Price Update] Error:', err);
       alert('Failed to update price: ' + (err instanceof Error ? err.message : 'Unknown error'));
       await loadData(); // Reload on error
     }
@@ -242,28 +254,43 @@ export default function PurchasePage() {
     }
   }
 
-  // Apply optimal plan
-  async function handleApplyOptimal(optimal: OptimalPurchase) {
-    if (!idToken) return;
-    if (!purchaseList) return;
-
-    try {
-      // Update each item's selected store
-      for (const plan of optimal.plans) {
-        for (const cardId of plan.cardIds) {
-          await purchaseItemsApi.update(
-            purchaseList.id,
-            cardId,
-            { selected_store_id: plan.storeId },
-            idToken
-          );
-        }
-      }
-      await loadData();
-    } catch (err) {
-      alert('Failed to apply optimal plan: ' + (err instanceof Error ? err.message : 'Unknown error'));
-      await loadData(); // Reload on error
+  // Calculate optimal plan (client-side greedy algorithm)
+  function calculateOptimalPlan() {
+    if (items.length === 0 || stores.length === 0) {
+      setOptimalTotal(0);
+      setOptimalStoreTotals([]);
+      return;
     }
+
+    let totalPrice = 0;
+    const storeTotalsMap = new Map<string, number>();
+
+    items.forEach((item) => {
+      // Find cheapest available price
+      const availablePrices = item.prices.filter((p) => p.price !== null && p.price !== undefined);
+      if (availablePrices.length === 0) return;
+
+      const cheapest = availablePrices.reduce((min, p) =>
+        p.price! < min.price! ? p : min
+      );
+
+      const itemTotal = cheapest.price! * item.quantity;
+      totalPrice += itemTotal;
+
+      const currentTotal = storeTotalsMap.get(cheapest.storeId) || 0;
+      storeTotalsMap.set(cheapest.storeId, currentTotal + itemTotal);
+    });
+
+    setOptimalTotal(totalPrice);
+
+    const storeTotalsArray = stores
+      .map((store) => ({
+        store,
+        total: storeTotalsMap.get(store.id) || 0,
+      }))
+      .filter((st) => st.total > 0);
+
+    setOptimalStoreTotals(storeTotalsArray);
   }
 
   const selectedCount = items.filter((item) => item.purchaseStoreId !== null).length;
@@ -331,7 +358,12 @@ export default function PurchasePage() {
                 onDelete={handleDeleteItem}
               />
             ))}
-            <TotalSummary items={items} stores={stores} onApplyOptimal={handleApplyOptimal} />
+            <TotalSummary
+              items={items}
+              stores={stores}
+              optimalTotal={optimalTotal}
+              optimalStoreTotals={optimalStoreTotals}
+            />
           </>
         )}
       </main>

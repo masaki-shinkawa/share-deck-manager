@@ -38,7 +38,7 @@ export interface PurchaseItemWithCard extends PurchaseItem {
   card_name: string | null;
   card_color: string | null;
   card_image_path: string | null;
-  prices?: PriceEntry[];
+  price_entries?: PriceEntry[];
 }
 
 export interface PriceEntry {
