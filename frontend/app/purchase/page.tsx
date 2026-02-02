@@ -34,8 +34,6 @@ export default function PurchasePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddStore, setShowAddStore] = useState(false);
-  const [optimalTotal, setOptimalTotal] = useState(0);
-  const [optimalStoreTotals, setOptimalStoreTotals] = useState<{ store: Store; total: number }[]>([]);
 
   // Load data when authenticated
   useEffect(() => {
@@ -43,11 +41,6 @@ export default function PurchasePage() {
       loadData();
     }
   }, [isReady]);
-
-  // Calculate optimal plan automatically whenever items or stores change
-  useEffect(() => {
-    calculateOptimalPlan();
-  }, [items, stores]);
 
   // Convert API data to UI format
   const convertToCardItems = (
@@ -275,45 +268,6 @@ export default function PurchasePage() {
     }
   }
 
-  // Calculate optimal plan (client-side greedy algorithm)
-  function calculateOptimalPlan() {
-    if (items.length === 0 || stores.length === 0) {
-      setOptimalTotal(0);
-      setOptimalStoreTotals([]);
-      return;
-    }
-
-    let totalPrice = 0;
-    const storeTotalsMap = new Map<string, number>();
-
-    items.forEach((item) => {
-      // Find cheapest available price
-      const availablePrices = item.prices.filter((p) => p.price !== null && p.price !== undefined);
-      if (availablePrices.length === 0) return;
-
-      const cheapest = availablePrices.reduce((min, p) =>
-        p.price! < min.price! ? p : min
-      );
-
-      const itemTotal = cheapest.price! * item.quantity;
-      totalPrice += itemTotal;
-
-      const currentTotal = storeTotalsMap.get(cheapest.storeId) || 0;
-      storeTotalsMap.set(cheapest.storeId, currentTotal + itemTotal);
-    });
-
-    setOptimalTotal(totalPrice);
-
-    const storeTotalsArray = stores
-      .map((store) => ({
-        store,
-        total: storeTotalsMap.get(store.id) || 0,
-      }))
-      .filter((st) => st.total > 0);
-
-    setOptimalStoreTotals(storeTotalsArray);
-  }
-
   const selectedCount = items.filter((item) => item.allocations.length > 0).length;
 
   // Show loading state while authenticating or loading data
@@ -384,8 +338,6 @@ export default function PurchasePage() {
             <TotalSummary
               items={items}
               stores={stores}
-              optimalTotal={optimalTotal}
-              optimalStoreTotals={optimalStoreTotals}
             />
           </>
         )}
