@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { CardItem, Store } from '@/app/lib/types';
 
 interface ItemCardProps {
@@ -12,6 +12,50 @@ interface ItemCardProps {
   onUpdateAllocation: (allocationId: string, quantity: number) => void;
   onDeleteAllocation: (allocationId: string) => void;
   onDelete: (itemId: string) => void;
+}
+
+interface QuantityInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
+  value: number;
+  onCommit: (value: number) => void;
+  min?: number;
+}
+
+function QuantityInput({ value, onCommit, min = 1, className, ...props }: QuantityInputProps) {
+  const [localValue, setLocalValue] = useState<string>(value.toString());
+
+  useEffect(() => {
+    setLocalValue(value.toString());
+  }, [value]);
+
+  const handleBlur = () => {
+    const parsed = parseInt(localValue);
+    const newValue = isNaN(parsed) ? min : parsed;
+
+    // Reset display if needed
+    if (isNaN(parsed) || parsed < min) {
+      setLocalValue(newValue.toString());
+    }
+
+    if (newValue !== value) {
+      onCommit(newValue);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalValue(e.target.value);
+  };
+
+  return (
+    <input
+      type="number"
+      min={min}
+      value={localValue}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      className={className}
+      {...props}
+    />
+  );
 }
 
 export function ItemCard({
@@ -71,12 +115,11 @@ export function ItemCard({
           <h3 className="font-medium text-lg text-white">{item.name}</h3>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-sm text-gray-400">必要枚数:</span>
-            <input
-              type="number"
-              min="1"
-              max="10"
+            <QuantityInput
+              min={1}
+              max={10}
               value={item.quantity}
-              onChange={(e) => onUpdateQuantity(item.id, parseInt(e.target.value) || 1)}
+              onCommit={(val) => onUpdateQuantity(item.id, val)}
               className="w-16 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm"
             />
             {remainingQuantity > 0 && (
@@ -160,12 +203,11 @@ export function ItemCard({
                       style={{ backgroundColor: alloc.storeColor }}
                     ></div>
                     <span className="text-sm text-white flex-1">{alloc.storeName}</span>
-                    <input
-                      type="number"
-                      min="1"
+                    <QuantityInput
+                      min={1}
                       max={item.quantity}
                       value={alloc.quantity}
-                      onChange={(e) => onUpdateAllocation(alloc.id, parseInt(e.target.value) || 1)}
+                      onCommit={(val) => onUpdateAllocation(alloc.id, val)}
                       className="w-12 px-1 py-1 bg-gray-600 border border-gray-500 rounded text-white text-sm text-center"
                     />
                     <span className="text-sm text-white min-w-[60px] text-right">
