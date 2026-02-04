@@ -14,15 +14,15 @@ import {
   type PurchaseList,
   type PurchaseItemWithCard,
   type OptimalPurchasePlan,
-} from '@/lib/api/purchases';
-import { customCardsApi } from '@/lib/api/custom-cards';
+} from '@/features/purchase/api/purchases';
+import { customCardsApi } from '@/features/purchase/api/custom-cards';
 import type { CardItem, Store } from '@/lib/types';
-import { Header } from '@/components/shopping-list/header';
-import { StoreTabs } from '@/components/shopping-list/store-tabs';
-import { ItemCard } from '@/components/shopping-list/item-card';
-import { AddItemForm } from '@/components/shopping-list/add-item-form';
-import { AddStoreDialog } from '@/components/shopping-list/add-store-dialog';
-import { TotalSummary } from '@/components/shopping-list/total-summary';
+import { Header } from '@/features/purchase/components/header';
+import { StoreTabs } from '@/features/purchase/components/store-tabs';
+import { ItemCard } from '@/features/purchase/components/item-card';
+import { AddItemForm } from '@/features/purchase/components/add-item-form';
+import { AddStoreDialog } from '@/features/purchase/components/add-store-dialog';
+import { TotalSummary } from '@/features/purchase/components/total-summary';
 
 export default function PurchasePage() {
   const router = useRouter();

@@ -205,14 +205,6 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
 
               {/* Action buttons */}
               <div className="absolute top-2 right-2 flex gap-1">
-                <Link href={`/decks/${deck.id}/purchase`}>
-                  <button
-                    className="rounded-full p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
-                    title="購入リスト"
-                  >
-                    <ShoppingCart size={16} />
-                  </button>
-                </Link>
                 <button
                   onClick={() => handleEditClick(deck)}
                   className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-zinc-800 dark:hover:text-gray-300"

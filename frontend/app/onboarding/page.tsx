@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import NicknameForm from "@/components/NicknameForm";
+import NicknameForm from "@/features/auth/components/NicknameForm";
 
 export default async function OnboardingPage() {
   const session = await getServerSession(authOptions);

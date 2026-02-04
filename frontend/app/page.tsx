@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import SignOutButton from "@/components/SignOutButton";
+import SignOutButton from "@/features/auth/components/SignOutButton";
 import DashboardCard from "@/components/DashboardCard";
 import UserInfoCard from "@/components/UserInfoCard";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
