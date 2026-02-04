@@ -17,15 +17,13 @@ export function StoreTabs({ stores, onAddStore, onRemoveStore }: StoreTabsProps)
             style={{ borderLeft: `4px solid ${store.color}` }}
           >
             <span>{store.name}</span>
-            {stores.length > 1 && (
-              <button
-                onClick={() => onRemoveStore(store.id)}
-                className="text-gray-400 hover:text-red-500 transition-colors"
-                title="ショップを削除"
-              >
-                ×
-              </button>
-            )}
+            <button
+              onClick={() => onRemoveStore(store.id)}
+              className="text-gray-400 hover:text-red-500 transition-colors"
+              title="ショップを削除"
+            >
+              ×
+            </button>
           </div>
         ))}
         <button

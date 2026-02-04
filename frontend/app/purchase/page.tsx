@@ -130,7 +130,6 @@ export default function PurchasePage() {
   // Remove store
   async function handleRemoveStore(storeId: string) {
     if (!idToken) return;
-    if (stores.length <= 1) return;
 
     if (!confirm('このショップを削除しますか？')) return;
 

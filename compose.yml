@@ -42,22 +42,5 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: deck-manager-frontend
-    env_file:
-      - ./frontend/.env.local
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-    depends_on:
-      - backend
-    restart: unless-stopped
-
 volumes:
   postgres_data:

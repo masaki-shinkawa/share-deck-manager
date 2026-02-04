@@ -100,6 +100,11 @@ async function apiCall<T>(
     throw new Error(error.detail || `API call failed: ${response.statusText}`);
   }
 
+  // Handle 204 No Content responses
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   return response.json();
 }
 
