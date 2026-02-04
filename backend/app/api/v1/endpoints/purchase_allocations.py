@@ -156,20 +156,6 @@ async def create_allocation(
             detail="Allocation for this store already exists. Please update instead."
         )
 
-    # 合計枚数チェック
-    current_result = await session.execute(
-        select(PurchaseAllocation)
-        .where(PurchaseAllocation.item_id == item_id)
-    )
-    current_total = current_result.scalars().all()
-
-    total_allocated = sum(a.quantity for a in current_total) + allocation_data.quantity
-    if total_allocated > item.quantity:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Total allocated quantity ({total_allocated}) exceeds item quantity ({item.quantity})"
-        )
-
     # 作成
     allocation = PurchaseAllocation(
         item_id=item_id,
@@ -211,22 +197,7 @@ async def update_allocation(
         )
 
     # 所有権確認
-    item = await verify_item_ownership(allocation.item_id, user, session)
-
-    # 合計枚数チェック
-    current_result = await session.execute(
-        select(PurchaseAllocation)
-        .where(PurchaseAllocation.item_id == allocation.item_id)
-        .where(PurchaseAllocation.id != allocation_id)
-    )
-    current_total = current_result.scalars().all()
-
-    total_allocated = sum(a.quantity for a in current_total) + allocation_data.quantity
-    if total_allocated > item.quantity:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Total allocated quantity ({total_allocated}) exceeds item quantity ({item.quantity})"
-        )
+    await verify_item_ownership(allocation.item_id, user, session)
 
     # 更新
     allocation.quantity = allocation_data.quantity

@@ -8,14 +8,32 @@ interface AddStoreDialogProps {
   onAdd: (name: string, color: string) => void;
 }
 
+// Predefined color palette for good contrast and visibility
+const STORE_COLORS = [
+  '#3B82F6', // Blue
+  '#EF4444', // Red
+  '#10B981', // Green
+  '#F59E0B', // Amber
+  '#8B5CF6', // Purple
+  '#EC4899', // Pink
+  '#14B8A6', // Teal
+  '#F97316', // Orange
+  '#6366F1', // Indigo
+  '#84CC16', // Lime
+];
+
+function getRandomColor(): string {
+  return STORE_COLORS[Math.floor(Math.random() * STORE_COLORS.length)];
+}
+
 export function AddStoreDialog({ open, onOpenChange, onAdd }: AddStoreDialogProps) {
   const [name, setName] = useState('');
-  const [color, setColor] = useState('#3B82F6');
+  const [color, setColor] = useState(getRandomColor());
 
   useEffect(() => {
     if (open) {
       setName('');
-      setColor('#3B82F6');
+      setColor(getRandomColor());
     }
   }, [open]);
 
