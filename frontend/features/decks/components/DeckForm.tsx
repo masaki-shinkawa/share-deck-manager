@@ -54,7 +54,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
   };
 
   // Filter cards based on search query and color
-  const filteredCards = cards.filter((card) => {
+  const filteredCards = (cards || []).filter((card) => {
     const matchesSearch =
       searchQuery === "" ||
       card.name.toLowerCase().includes(searchQuery.toLowerCase());

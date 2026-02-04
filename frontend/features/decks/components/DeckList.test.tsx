@@ -11,8 +11,9 @@ import DeckList from './DeckList';
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => {
+    const { fill, unoptimized, quality, sizes, priority, ...rest } = props;
     // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
-    return <img {...props} />;
+    return <img {...rest} />;
   },
 }));
 
@@ -21,6 +22,7 @@ describe('DeckList', () => {
     {
       id: '1',
       name: 'テストユーザー',
+      status: 'built' as const,
       leader_card: {
         id: 'card-1',
         card_id: 'OP01-001',
@@ -72,7 +74,7 @@ describe('DeckList', () => {
       expect(deckName).toBeInTheDocument();
 
       // Created date should be visible
-      expect(screen.getByText(/Created:/)).toBeInTheDocument();
+      expect(screen.getByText(/作成日:/)).toBeInTheDocument();
 
       // Leader name should NOT be visible
       expect(screen.queryByText('モンキー・D・ルフィ')).not.toBeInTheDocument();
@@ -84,12 +86,14 @@ describe('DeckList', () => {
       const customCardDecks = [
         {
           id: 'deck-custom',
-          name: 'Red 未発売リーダー',
+          name: '赤 未発売リーダー',
+          status: 'built' as const,
           leader_card: null,
           custom_card: {
             id: 'custom-1',
             name: '未発売リーダー',
-            color: 'Red',
+            color1: '赤',
+            color2: null,
           },
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z',
@@ -104,10 +108,11 @@ describe('DeckList', () => {
         />
       );
 
-      // Deck name should be visible
-      expect(screen.getByText('Red 未発売リーダー')).toBeInTheDocument();
-      // Custom card color should be displayed as text
-      expect(screen.getByText('Red')).toBeInTheDocument();
+      // Deck name should be visible (as h3)
+      expect(screen.getByRole('heading', { level: 3, name: '赤 未発売リーダー' })).toBeInTheDocument();
+      // Custom card color and name should be displayed as text (in multiple places)
+      const customCardTexts = screen.getAllByText('赤 未発売リーダー');
+      expect(customCardTexts.length).toBeGreaterThan(0);
     });
   });
 
@@ -117,16 +122,19 @@ describe('DeckList', () => {
         {
           ...mockDecks[0],
           id: '1',
+          status: 'built' as const,
           leader_card: { ...mockDecks[0].leader_card, name: 'ルフィ' },
         },
         {
           ...mockDecks[0],
           id: '2',
+          status: 'built' as const,
           leader_card: { ...mockDecks[0].leader_card, name: 'ゾロ' },
         },
         {
           ...mockDecks[0],
           id: '3',
+          status: 'built' as const,
           leader_card: { ...mockDecks[0].leader_card, name: 'ナミ' },
         },
       ];

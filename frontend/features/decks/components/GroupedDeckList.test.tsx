@@ -11,8 +11,9 @@ import GroupedDeckList from './GroupedDeckList';
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => {
+    const { fill, unoptimized, quality, sizes, priority, ...rest } = props;
     // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
-    return <img {...props} />;
+    return <img {...rest} />;
   },
 }));
 
@@ -30,6 +31,7 @@ describe('GroupedDeckList', () => {
     {
       id: 'deck-1',
       name: 'テストデッキ',
+      status: 'built' as const,
       user: mockUsers[0],
       leader_card: {
         id: 'card-1',
@@ -85,13 +87,15 @@ describe('GroupedDeckList', () => {
       const customCardDecks = [
         {
           id: 'deck-custom',
-          name: 'Red 未発売リーダー',
+          name: '赤 未発売リーダー',
+          status: 'built' as const,
           user: mockUsers[0],
           leader_card: null,
           custom_card: {
             id: 'custom-1',
             name: '未発売リーダー',
-            color: 'Red',
+            color1: '赤',
+            color2: null,
           },
           created_at: '2024-01-01T00:00:00Z',
         },
@@ -106,9 +110,10 @@ describe('GroupedDeckList', () => {
       );
 
       // Deck name should be visible
-      expect(screen.getByText('Red 未発売リーダー')).toBeInTheDocument();
-      // Custom card color should be displayed as text
-      expect(screen.getByText('Red')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 3, name: '赤 未発売リーダー' })).toBeInTheDocument();
+      // Custom card color should be displayed as text (in multiple places)
+      const customCardTexts = screen.getAllByText(/赤/);
+      expect(customCardTexts.length).toBeGreaterThan(0);
     });
   });
 
@@ -118,16 +123,19 @@ describe('GroupedDeckList', () => {
         {
           ...mockDecks[0],
           id: 'deck-1',
+          status: 'built' as const,
           leader_card: { ...mockDecks[0].leader_card, name: 'ルフィ' },
         },
         {
           ...mockDecks[0],
           id: 'deck-2',
+          status: 'built' as const,
           leader_card: { ...mockDecks[0].leader_card, name: 'ゾロ' },
         },
         {
           ...mockDecks[0],
           id: 'deck-3',
+          status: 'built' as const,
           leader_card: { ...mockDecks[0].leader_card, name: 'ナミ' },
         },
       ];

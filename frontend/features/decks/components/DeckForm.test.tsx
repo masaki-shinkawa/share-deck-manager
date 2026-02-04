@@ -11,8 +11,9 @@ import DeckForm from './DeckForm';
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => {
+    const { fill, unoptimized, quality, sizes, priority, ...rest } = props;
     // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
-    return <img {...props} />;
+    return <img {...rest} />;
   },
 }));
 
@@ -67,16 +68,16 @@ describe('DeckForm - Leader Card Search', () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
       // Open dialog
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       // Wait for cards to load
       await waitFor(() => {
-        expect(screen.getByText('Select Leader Card')).toBeInTheDocument();
+        expect(screen.getByText('リーダーカードを選択')).toBeInTheDocument();
       });
 
       // Search input should exist
-      const searchInput = screen.getByPlaceholderText(/search/i);
+      const searchInput = screen.getByPlaceholderText(/カードを検索/i);
       expect(searchInput).toBeInTheDocument();
     });
 
@@ -84,7 +85,7 @@ describe('DeckForm - Leader Card Search', () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
       // Open dialog
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       await waitFor(() => {
@@ -98,7 +99,7 @@ describe('DeckForm - Leader Card Search', () => {
       expect(screen.getByText('ウソップ')).toBeInTheDocument();
 
       // Search for "ルフィ"
-      const searchInput = screen.getByPlaceholderText(/search/i);
+      const searchInput = screen.getByPlaceholderText(/カードを検索/i);
       fireEvent.change(searchInput, { target: { value: 'ルフィ' } });
 
       // Only Luffy should be visible
@@ -111,7 +112,7 @@ describe('DeckForm - Leader Card Search', () => {
     it('should handle case-insensitive search', async () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       await waitFor(() => {
@@ -119,7 +120,7 @@ describe('DeckForm - Leader Card Search', () => {
       });
 
       // Search with lowercase 'd' should match 'D' in card name
-      const searchInput = screen.getByPlaceholderText(/search/i);
+      const searchInput = screen.getByPlaceholderText(/カードを検索/i);
       fireEvent.change(searchInput, { target: { value: 'd' } });
 
       // Luffy (モンキー・D・ルフィ) should be found via case-insensitive match on 'D'
@@ -131,14 +132,14 @@ describe('DeckForm - Leader Card Search', () => {
     it('should show all cards when search is cleared', async () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       await waitFor(() => {
         expect(screen.getByText('モンキー・D・ルフィ')).toBeInTheDocument();
       });
 
-      const searchInput = screen.getByPlaceholderText(/search/i);
+      const searchInput = screen.getByPlaceholderText(/カードを検索/i);
 
       // Search for something
       fireEvent.change(searchInput, { target: { value: 'ゾロ' } });
@@ -157,18 +158,18 @@ describe('DeckForm - Leader Card Search', () => {
     it('should show "No cards found" when no matches', async () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       await waitFor(() => {
         expect(screen.getByText('モンキー・D・ルフィ')).toBeInTheDocument();
       });
 
-      const searchInput = screen.getByPlaceholderText(/search/i);
+      const searchInput = screen.getByPlaceholderText(/カードを検索/i);
       fireEvent.change(searchInput, { target: { value: '存在しないカード' } });
 
       // No results message should appear
-      expect(screen.getByText(/no cards found/i)).toBeInTheDocument();
+      expect(screen.getByText(/カードが見つかりません/)).toBeInTheDocument();
       expect(screen.queryByText('モンキー・D・ルフィ')).not.toBeInTheDocument();
     });
   });
@@ -177,11 +178,11 @@ describe('DeckForm - Leader Card Search', () => {
     it('should display manual input button at the top of card grid', async () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Select Leader Card')).toBeInTheDocument();
+        expect(screen.getByText('リーダーカードを選択')).toBeInTheDocument();
       });
 
       // Manual input button should be present
@@ -191,7 +192,7 @@ describe('DeckForm - Leader Card Search', () => {
     it('should open manual input modal when clicked', async () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       await waitFor(() => {
@@ -201,9 +202,9 @@ describe('DeckForm - Leader Card Search', () => {
       fireEvent.click(screen.getByTestId('manual-input-card'));
 
       // Manual input form should appear
-      expect(screen.getByPlaceholderText(/card name/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/color 1/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/color 2/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/カード名/)).toBeInTheDocument();
+      expect(screen.getByLabelText(/色1/)).toBeInTheDocument();
+      expect(screen.getByLabelText(/色2/)).toBeInTheDocument();
     });
 
     it('should create deck with custom card when manual form is submitted', async () => {
@@ -214,7 +215,7 @@ describe('DeckForm - Leader Card Search', () => {
 
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       await waitFor(() => {
@@ -225,7 +226,7 @@ describe('DeckForm - Leader Card Search', () => {
       fireEvent.click(screen.getByTestId('manual-input-card'));
 
       // Fill in the form
-      const nameInput = screen.getByPlaceholderText(/card name/i);
+      const nameInput = screen.getByPlaceholderText(/カード名/);
       fireEvent.change(nameInput, { target: { value: '新リーダー' } });
 
       const color1Select = screen.getByTestId('manual-color1-select');
@@ -245,11 +246,11 @@ describe('DeckForm - Leader Card Search', () => {
     it('should display color filter dropdown', async () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Select Leader Card')).toBeInTheDocument();
+        expect(screen.getByText('リーダーカードを選択')).toBeInTheDocument();
       });
 
       // Color filter dropdown should exist
@@ -260,7 +261,7 @@ describe('DeckForm - Leader Card Search', () => {
     it('should filter by color only', async () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       await waitFor(() => {
@@ -281,7 +282,7 @@ describe('DeckForm - Leader Card Search', () => {
     it('should filter by name AND color', async () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       await waitFor(() => {
@@ -289,7 +290,7 @@ describe('DeckForm - Leader Card Search', () => {
       });
 
       // Search for "ルフィ" AND color "赤"
-      const searchInput = screen.getByPlaceholderText(/search/i);
+      const searchInput = screen.getByPlaceholderText(/カードを検索/i);
       const colorFilter = screen.getByLabelText(/color/i);
 
       fireEvent.change(searchInput, { target: { value: 'ルフィ' } });
@@ -304,7 +305,7 @@ describe('DeckForm - Leader Card Search', () => {
     it('should show "All Colors" option to clear color filter', async () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       await waitFor(() => {
@@ -328,7 +329,7 @@ describe('DeckForm - Leader Card Search', () => {
     it('should extract unique colors from cards', async () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       // Wait for cards to actually load
@@ -359,7 +360,7 @@ describe('DeckForm - Leader Card Search', () => {
     it('should display Color1 and Color2 dropdowns in manual input form', async () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       await waitFor(() => {
@@ -379,7 +380,7 @@ describe('DeckForm - Leader Card Search', () => {
     it('should have "--- (None)" option for Color2', async () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       await waitFor(() => {
@@ -391,8 +392,8 @@ describe('DeckForm - Leader Card Search', () => {
       const color2Select = screen.getByTestId('manual-color2-select') as HTMLSelectElement;
       const options = Array.from(color2Select.options).map((opt) => opt.text);
 
-      // Color2 should have "--- (None)" option
-      expect(options).toContain('--- (None)');
+      // Color2 should have "--- (なし)" option
+      expect(options).toContain('--- (なし)');
     });
 
     it('should create single-color custom card when Color2 is not selected', async () => {
@@ -419,7 +420,7 @@ describe('DeckForm - Leader Card Search', () => {
 
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       // Wait for cards to load AND manual input card to appear
@@ -432,11 +433,11 @@ describe('DeckForm - Leader Card Search', () => {
 
       // Wait for manual input form to appear
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(/card name/i)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/カード名/)).toBeInTheDocument();
       });
 
       // Fill in the form
-      const nameInput = screen.getByPlaceholderText(/card name/i);
+      const nameInput = screen.getByPlaceholderText(/カード名/);
       fireEvent.change(nameInput, { target: { value: '単色リーダー' } });
 
       // Wait for color options to be available
@@ -490,7 +491,7 @@ describe('DeckForm - Leader Card Search', () => {
 
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       // Wait for cards to load AND manual input card to appear
@@ -503,11 +504,11 @@ describe('DeckForm - Leader Card Search', () => {
 
       // Wait for manual input form to appear
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(/card name/i)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/カード名/)).toBeInTheDocument();
       });
 
       // Fill in the form
-      const nameInput = screen.getByPlaceholderText(/card name/i);
+      const nameInput = screen.getByPlaceholderText(/カード名/);
       fireEvent.change(nameInput, { target: { value: '多色リーダー' } });
 
       // Wait for color options to be available
@@ -540,7 +541,7 @@ describe('DeckForm - Leader Card Search', () => {
     it('should prevent selecting same color for Color1 and Color2', async () => {
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       // Wait for cards to load AND manual input card to appear
@@ -598,7 +599,7 @@ describe('DeckForm - Leader Card Search', () => {
 
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
-      const newDeckButton = screen.getByText('New Deck');
+      const newDeckButton = screen.getByText('デッキ作成');
       fireEvent.click(newDeckButton);
 
       // Wait for cards to load AND manual input card to appear
@@ -611,11 +612,11 @@ describe('DeckForm - Leader Card Search', () => {
 
       // Wait for manual input form to appear
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(/card name/i)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/カード名/)).toBeInTheDocument();
       });
 
       // User selects in wrong order: Color1=黄, Color2=赤
-      const nameInput = screen.getByPlaceholderText(/card name/i);
+      const nameInput = screen.getByPlaceholderText(/カード名/);
       fireEvent.change(nameInput, { target: { value: 'Auto-sorted Leader' } });
 
       // Wait for color options to be available
