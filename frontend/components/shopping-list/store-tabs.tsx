@@ -1,4 +1,4 @@
-import type { Store } from '@/app/lib/types';
+import type { Store } from '@/lib/types';
 
 interface StoreTabsProps {
   stores: Store[];

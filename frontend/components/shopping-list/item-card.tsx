@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { CardItem, Store } from '@/app/lib/types';
+import type { CardItem, Store } from '@/lib/types';
 
 interface ItemCardProps {
   item: CardItem;
@@ -214,10 +214,16 @@ export function ItemCard({
                     ></div>
                     <span className="text-sm text-white flex-1">{alloc.storeName}</span>
                     <QuantityInput
-                      min={1}
+                      min={0}
                       max={item.quantity}
                       value={alloc.quantity}
-                      onCommit={(val) => onUpdateAllocation(alloc.id, val)}
+                      onCommit={(val) => {
+                        if (val <= 0) {
+                          onDeleteAllocation(alloc.id);
+                        } else {
+                          onUpdateAllocation(alloc.id, val);
+                        }
+                      }}
                       className="w-12 px-1 py-1 bg-gray-600 border border-gray-500 rounded text-white text-sm text-center"
                     />
                     <span className="text-sm text-white min-w-[60px] text-right">

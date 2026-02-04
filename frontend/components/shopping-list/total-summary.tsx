@@ -1,6 +1,6 @@
 'use client';
 
-import type { CardItem, Store } from '@/app/lib/types';
+import type { CardItem, Store } from '@/lib/types';
 
 interface TotalSummaryProps {
   items: CardItem[];

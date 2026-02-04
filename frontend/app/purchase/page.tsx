@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import {
   storesApi,
   purchaseListsApi,
@@ -14,15 +14,15 @@ import {
   type PurchaseList,
   type PurchaseItemWithCard,
   type OptimalPurchasePlan,
-} from '@/app/lib/api/purchases';
-import { customCardsApi } from '@/app/lib/api/custom-cards';
-import type { CardItem, Store } from '@/app/lib/types';
-import { Header } from '@/app/components/shopping-list/header';
-import { StoreTabs } from '@/app/components/shopping-list/store-tabs';
-import { ItemCard } from '@/app/components/shopping-list/item-card';
-import { AddItemForm } from '@/app/components/shopping-list/add-item-form';
-import { AddStoreDialog } from '@/app/components/shopping-list/add-store-dialog';
-import { TotalSummary } from '@/app/components/shopping-list/total-summary';
+} from '@/lib/api/purchases';
+import { customCardsApi } from '@/lib/api/custom-cards';
+import type { CardItem, Store } from '@/lib/types';
+import { Header } from '@/components/shopping-list/header';
+import { StoreTabs } from '@/components/shopping-list/store-tabs';
+import { ItemCard } from '@/components/shopping-list/item-card';
+import { AddItemForm } from '@/components/shopping-list/add-item-form';
+import { AddStoreDialog } from '@/components/shopping-list/add-store-dialog';
+import { TotalSummary } from '@/components/shopping-list/total-summary';
 
 export default function PurchasePage() {
   const router = useRouter();
