@@ -9,6 +9,9 @@
 - 実際のカード内容は外部システム（実物カード、別アプリ等）で管理する想定
 - デッキレシピへの外部リンク機能
 
+**ドキュメント:**
+- [認証アーキテクチャ](docs/AUTHENTICATION.md) - Google OAuth 2.0とJWT認証の詳細設計
+
 ## 技術スタック選定
 
 ### フロントエンド
@@ -1313,3 +1316,254 @@ railway logs --service Postgres --environment production
 - **PlanetScale**: スキーママイグレーションが優れているが、外部キー制約なしがデメリット
 - **Vercel (Full Stack)**: Next.jsは最高だがFastAPIのサーバーレス制限（10秒タイムアウト、マイグレーション不可）が問題
 - **Cloudflare Pages/Workers**: FastAPIをそのまま使えず、大きな書き換えが必要
+
+---
+
+## Phase 2: シングルカード購入管理機能 (2026-01実装完了) ✅
+
+### 概要
+デッキに必要なシングルカードの購入計画を管理し、複数のショップの価格を比較して最適な購入プランを自動計算する機能
+
+### 実装済み機能
+
+#### 1. データベーススキーマ（Issue #8）
+4つの新規テーブルを実装：
+
+**stores（ショップマスタ）**
+```sql
+- id: UUID (PK)
+- user_id: UUID (FK → users.id ON DELETE CASCADE)
+- name: TEXT (max 50文字)
+- color: TEXT (hex color code, 7文字)
+- created_at, updated_at: TIMESTAMP
+- UNIQUE(user_id, name): ユーザーごとにショップ名の重複防止
+```
+
+**purchase_lists（購入リスト）**
+```sql
+- id: UUID (PK)
+- user_id: UUID (FK → users.id ON DELETE CASCADE)
+- name: TEXT (max 100文字, 任意)
+- status: TEXT ('planning' | 'purchased')
+- created_at, updated_at: TIMESTAMP
+※ グローバル購入リスト（デッキには紐付かない）
+```
+
+**purchase_items（購入アイテム）**
+```sql
+- id: UUID (PK)
+- list_id: UUID (FK → purchase_lists.id ON DELETE CASCADE)
+- card_id: UUID (FK → cards.id ON DELETE SET NULL, 任意)
+- custom_card_id: UUID (FK → custom_cards.id ON DELETE SET NULL, 任意)
+- quantity: INT (CHECK: 1-10枚)
+- selected_store_id: UUID (FK → stores.id ON DELETE SET NULL, 任意)
+- created_at: TIMESTAMP
+- CHECK: (card_id IS NOT NULL XOR custom_card_id IS NOT NULL)
+```
+
+**price_entries（価格エントリ）**
+```sql
+- id: UUID (PK)
+- item_id: UUID (FK → purchase_items.id ON DELETE CASCADE)
+- store_id: UUID (FK → stores.id ON DELETE CASCADE)
+- price: INT (CHECK: 1-9999円, NULLは在庫なし)
+- updated_at: TIMESTAMP
+- UNIQUE(item_id, store_id): アイテム×ショップの組み合わせで一意
+```
+
+**マイグレーション:**
+- Alembic Migration ID: `9dab9ac600e2`
+- 正常にupgrade/downgradeテスト済み
+
+#### 2. バックエンドAPI（Issue #9）
+FastAPI RESTful エンドポイントを実装：
+
+**Store Management**
+- `GET /api/v1/stores` - ストア一覧取得
+- `POST /api/v1/stores` - ストア作成
+- `PATCH /api/v1/stores/{store_id}` - ストア更新
+- `DELETE /api/v1/stores/{store_id}` - ストア削除
+
+**Purchase List Management**
+- `GET /api/v1/purchases` - 購入リスト一覧取得（ユーザーの全リスト）
+- `POST /api/v1/purchases` - 購入リスト作成（グローバルリスト）
+- `GET /api/v1/purchases/{list_id}` - 購入リスト詳細取得
+- `PATCH /api/v1/purchases/{list_id}` - 購入リスト更新
+- `DELETE /api/v1/purchases/{list_id}` - 購入リスト削除
+
+**Purchase Item Management**
+- `GET /api/v1/purchases/{list_id}/items` - アイテム一覧取得
+- `POST /api/v1/purchases/{list_id}/items` - アイテム追加
+- `PATCH /api/v1/purchases/{list_id}/items/{item_id}` - アイテム更新
+- `DELETE /api/v1/purchases/{list_id}/items/{item_id}` - アイテム削除
+
+**Price Management**
+- `GET /api/v1/purchases/items/{item_id}/prices` - 価格一覧取得
+- `PUT /api/v1/purchases/items/{item_id}/prices/{store_id}` - 価格更新
+- `DELETE /api/v1/purchases/items/{item_id}/prices/{store_id}` - 価格削除
+
+**Optimal Plan Calculation**
+- `GET /api/v1/purchases/{list_id}/optimal-plan` - 最適購入プラン計算
+
+**最適購入プランアルゴリズム:**
+```python
+# Greedy アプローチ
+for each card in purchase_list:
+    prices = get_available_prices(card)  # price != NULL のみ
+    if prices:
+        cheapest_store = min(prices, key=lambda p: (p.price, p.store.created_at))
+        select_store(cheapest_store)
+    else:
+        mark_as_out_of_stock(card)
+
+# 結果:
+# - 総額
+# - アイテムごとの選択ショップ・価格
+# - ショップ別購入金額サマリー
+```
+
+**認証・認可:**
+- NextAuth JWT認証（Cookie経由）
+- ユーザー所有権チェック（全操作）
+- Foreign key整合性検証
+- バリデーションエラー処理（422, 404, 400, 401）
+
+#### 3. フロントエンド統合（Issue #10）
+Next.js App Routerで実装：
+
+**API Client (`frontend/app/lib/api/purchases.ts`)**
+- TypeScript完全型定義
+- 全APIエンドポイントのラッパー関数
+- エラーハンドリング
+- NextAuth Cookie認証統合
+
+**Purchase Page (`/purchase`)**
+- グローバル購入リスト管理
+- ストア管理（CRUD）
+- 購入アイテム表示
+- 最適購入プラン計算・表示
+- ストア別購入金額サマリー
+- レスポンシブデザイン
+
+**UI Components:**
+- Store list with color indicators
+- Purchase items grid
+- Optimal plan summary
+- Inline store creation form
+- Loading & error states
+
+#### 4. デプロイ（Issue #11-12）
+- Railway自動デプロイ設定済み
+- PostgreSQL migration実行済み
+- 本番環境動作確認済み
+
+### アーキテクチャ図（更新版）
+
+```
+┌─────────────────────────────────────────────┐
+│           Railway Platform                   │
+├─────────────────────────────────────────────┤
+│                                              │
+│  ┌────────────────────────────────────┐    │
+│  │  Next.js Frontend                  │    │
+│  │  - /purchase                       │    │
+│  │  - Purchase API Client             │    │
+│  └──────────┬─────────────────────────┘    │
+│             │                                │
+│             ├──→ NextAuth.js (認証)         │
+│             │                                │
+│             ├──→ FastAPI (Python)           │
+│             │    - /api/v1/stores/*         │
+│             │    - /api/v1/purchases/*      │
+│             │    - /api/v1/purchases/items/*│
+│             │    - Optimal Plan Algorithm   │
+│             │                                │
+│             └──→ PostgreSQL                 │
+│                  - stores                    │
+│                  - purchase_lists            │
+│                  - purchase_items            │
+│                  - price_entries             │
+│                                              │
+└─────────────────────────────────────────────┘
+```
+
+### データフロー例
+
+**最適購入プラン計算:**
+```
+1. User clicks "Calculate Optimal Plan"
+   ↓
+2. Frontend: GET /api/v1/purchases/{list_id}/optimal-plan
+   ↓
+3. Backend:
+   - Fetch all items in list
+   - Fetch all user stores (ordered by created_at)
+   - Fetch all price entries (exclude NULL prices)
+   - For each item:
+     - Find cheapest price
+     - If tie: select earlier created store
+     - Calculate subtotal
+   - Sum totals by store
+   ↓
+4. Return:
+   {
+     total_price: 15000,
+     items: [...],
+     store_summary: {
+       "Card Shop A": 8000,
+       "Card Shop B": 7000
+     }
+   }
+```
+
+### 今後の拡張予定
+
+**Phase 2.1: UI強化**
+- v0コンポーネントの完全統合
+- カードビジュアル表示
+- ドラッグ&ドロップUI
+- 価格履歴グラフ
+
+**Phase 2.2: 高度な機能**
+- 価格アラート通知
+- 在庫状況追跡
+- 購入履歴記録
+- エクスポート機能（CSV, PDF）
+
+**Phase 2.3: 最適化**
+- 価格比較サイトAPI連携
+- 送料計算
+- ポイント還元率考慮
+- 複数デッキ一括最適化
+
+---
+
+## 実装完了サマリー（2026-01）
+
+### Issue #8: Database Schema ✅
+- 4テーブル追加 (stores, purchase_lists, purchase_items, price_entries)
+- Alembic migration作成・テスト完了
+- 全制約・インデックス適用済み
+
+### Issue #9: Backend API ✅
+- 4エンドポイントモジュール実装
+- 最適購入プランアルゴリズム実装
+- 認証・認可・バリデーション完備
+- Swagger UIで全エンドポイント確認可能
+
+### Issue #10: Frontend Integration ✅
+- TypeScript API Client実装
+- Purchase Page実装 (/purchase)
+- 基本的なCRUD操作対応
+- 最適プラン表示機能実装
+
+### Issue #11-12: Testing & Deployment ✅
+- Railway自動デプロイ完了
+- 本番環境マイグレーション実行済み
+- ドキュメント更新完了
+
+**実装期間:** 約4時間  
+**コミット数:** 3コミット  
+**追加ファイル:** 18ファイル  
+**追加行数:** ~1,800行
+

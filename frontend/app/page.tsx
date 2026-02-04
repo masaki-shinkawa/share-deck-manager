@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import SignOutButton from "@/components/SignOutButton";
+import SignOutButton from "@/features/auth/components/SignOutButton";
 import DashboardCard from "@/components/DashboardCard";
 import UserInfoCard from "@/components/UserInfoCard";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -109,6 +109,13 @@ export default async function DashboardPage() {
             icon="arrow"
           />
 
+          <DashboardCard
+            title="Purchase Management"
+            description="カード購入を管理"
+            href="/purchase"
+            icon="arrow"
+          />
+
           {userData.role === "admin" && (
             <DashboardCard
               title="管理者ページ"
@@ -117,13 +124,6 @@ export default async function DashboardPage() {
               icon="arrow"
             />
           )}
-
-          <DashboardCard
-            title="Coming Soon"
-            description="新機能開発中"
-            icon="lock"
-            disabled
-          />
         </div>
       </div>
     </div>

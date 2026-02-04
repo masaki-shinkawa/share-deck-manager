@@ -34,6 +34,10 @@ from app.models.user import User  # Needed for SQLModel to detect models
 from app.models.deck import Deck  # Needed for SQLModel to detect models
 from app.models.card import Card  # Needed for SQLModel to detect models
 from app.models.custom_card import CustomCard  # Needed for SQLModel to detect models
+from app.models.store import Store  # Purchase management models
+from app.models.purchase_list import PurchaseList  # Purchase management models
+from app.models.purchase_item import PurchaseItem  # Purchase management models
+from app.models.price_entry import PriceEntry  # Purchase management models
 
 target_metadata = SQLModel.metadata
 

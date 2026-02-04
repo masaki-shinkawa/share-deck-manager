@@ -1,36 +1,28 @@
 /**
- * Tests for GroupedDeckList component
+ * Tests for DeckList component
  *
  * This test verifies that the leader card name is displayed WITHOUT the "Leader:" prefix.
  */
 
 import { render, screen } from '@testing-library/react';
-import GroupedDeckList from './GroupedDeckList';
+import DeckList from './DeckList';
 
 // Mock next/image
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => {
+    const { fill, unoptimized, quality, sizes, priority, ...rest } = props;
     // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
-    return <img {...props} />;
+    return <img {...rest} />;
   },
 }));
 
-describe('GroupedDeckList', () => {
-  const mockUsers = [
-    {
-      id: 'user-1',
-      email: 'user1@example.com',
-      nickname: 'User 1',
-      image: null,
-    },
-  ];
-
+describe('DeckList', () => {
   const mockDecks = [
     {
-      id: 'deck-1',
-      name: 'テストデッキ',
-      user: mockUsers[0],
+      id: '1',
+      name: 'テストユーザー',
+      status: 'built' as const,
       leader_card: {
         id: 'card-1',
         card_id: 'OP01-001',
@@ -40,8 +32,12 @@ describe('GroupedDeckList', () => {
         image_path: 'https://example.com/card.jpg',
       },
       created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
     },
   ];
+
+  const mockOnEdit = jest.fn();
+  const mockOnDelete = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -50,7 +46,11 @@ describe('GroupedDeckList', () => {
   describe('Leader card name display', () => {
     it('should NOT display leader card name', () => {
       render(
-        <GroupedDeckList users={mockUsers} decks={mockDecks} totalCount={1} />
+        <DeckList
+          decks={mockDecks}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
       );
 
       // Leader card name should NOT be visible
@@ -60,20 +60,21 @@ describe('GroupedDeckList', () => {
       expect(screen.queryByText(/Leader:/)).not.toBeInTheDocument();
     });
 
-    it('should only display deck name and user info', () => {
+    it('should only display deck name and created date', () => {
       render(
-        <GroupedDeckList users={mockUsers} decks={mockDecks} totalCount={1} />
+        <DeckList
+          decks={mockDecks}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
       );
 
       // Deck name should be visible
-      const deckName = screen.getByRole('heading', {
-        level: 3,
-        name: 'テストデッキ',
-      });
+      const deckName = screen.getByRole('heading', { level: 3, name: 'テストユーザー' });
       expect(deckName).toBeInTheDocument();
 
-      // User nickname should be visible
-      expect(screen.getByText('User 1')).toBeInTheDocument();
+      // Created date should be visible
+      expect(screen.getByText(/作成日:/)).toBeInTheDocument();
 
       // Leader name should NOT be visible
       expect(screen.queryByText('モンキー・D・ルフィ')).not.toBeInTheDocument();
@@ -81,62 +82,68 @@ describe('GroupedDeckList', () => {
   });
 
   describe('Custom card deck display', () => {
-    it('should display custom card name and color as text', () => {
+    it('should display custom card name and color as text when no image', () => {
       const customCardDecks = [
         {
           id: 'deck-custom',
-          name: 'Red 未発売リーダー',
-          user: mockUsers[0],
+          name: '赤 未発売リーダー',
+          status: 'built' as const,
           leader_card: null,
           custom_card: {
             id: 'custom-1',
             name: '未発売リーダー',
-            color: 'Red',
+            color1: '赤',
+            color2: null,
           },
           created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
         },
       ];
 
       render(
-        <GroupedDeckList
-          users={mockUsers}
+        <DeckList
           decks={customCardDecks}
-          totalCount={1}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
         />
       );
 
-      // Deck name should be visible
-      expect(screen.getByText('Red 未発売リーダー')).toBeInTheDocument();
-      // Custom card color should be displayed as text
-      expect(screen.getByText('Red')).toBeInTheDocument();
+      // Deck name should be visible (as h3)
+      expect(screen.getByRole('heading', { level: 3, name: '赤 未発売リーダー' })).toBeInTheDocument();
+      // Custom card color and name should be displayed as text (in multiple places)
+      const customCardTexts = screen.getAllByText('赤 未発売リーダー');
+      expect(customCardTexts.length).toBeGreaterThan(0);
     });
   });
 
-  describe('Multiple decks with different leaders', () => {
+  describe('Multiple decks', () => {
     it('should NOT display any leader names', () => {
       const multipleDecks = [
         {
           ...mockDecks[0],
-          id: 'deck-1',
+          id: '1',
+          status: 'built' as const,
           leader_card: { ...mockDecks[0].leader_card, name: 'ルフィ' },
         },
         {
           ...mockDecks[0],
-          id: 'deck-2',
+          id: '2',
+          status: 'built' as const,
           leader_card: { ...mockDecks[0].leader_card, name: 'ゾロ' },
         },
         {
           ...mockDecks[0],
-          id: 'deck-3',
+          id: '3',
+          status: 'built' as const,
           leader_card: { ...mockDecks[0].leader_card, name: 'ナミ' },
         },
       ];
 
       render(
-        <GroupedDeckList
-          users={mockUsers}
+        <DeckList
           decks={multipleDecks}
-          totalCount={3}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
         />
       );
 
@@ -146,16 +153,6 @@ describe('GroupedDeckList', () => {
       expect(screen.queryByText('ナミ')).not.toBeInTheDocument();
 
       // No "Leader:" prefix should exist
-      expect(screen.queryByText(/Leader:/)).not.toBeInTheDocument();
-    });
-  });
-
-  describe('Empty state', () => {
-    it('should not display any leader names when no decks exist', () => {
-      render(<GroupedDeckList users={[]} decks={[]} totalCount={0} />);
-
-      // No leader names should be visible
-      expect(screen.queryByText(/モンキー・D・ルフィ/)).not.toBeInTheDocument();
       expect(screen.queryByText(/Leader:/)).not.toBeInTheDocument();
     });
   });

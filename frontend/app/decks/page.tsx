@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import DeckList from "@/components/DeckList";
+import DeckList from "@/features/decks/components/DeckList";
 
 export default async function DecksPage() {
   const session = await getServerSession(authOptions);

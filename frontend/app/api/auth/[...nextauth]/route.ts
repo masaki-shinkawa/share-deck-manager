@@ -11,6 +11,7 @@ export const authOptions: NextAuthOptions = {
           prompt: "consent",
           access_type: "offline",
           response_type: "code",
+          scope: "openid email profile",
         },
       },
     }),
@@ -72,16 +73,20 @@ async function refreshAccessToken(token: any) {
       throw refreshedTokens
     }
 
+    // If no new id_token is returned, force re-authentication
+    if (!refreshedTokens.id_token) {
+      return {
+        ...token,
+        error: "RefreshAccessTokenError",
+      }
+    }
+
     return {
       ...token,
       accessToken: refreshedTokens.access_token,
-      // Google doesn't always return a new id_token on refresh unless requested,
-      // but usually it does if the scope includes openid.
-      // If it doesn't, we keep the old id_token (though it might be expired).
-      // However, for backend verification, we NEED a fresh id_token.
-      idToken: refreshedTokens.id_token ?? token.idToken,
+      idToken: refreshedTokens.id_token,
       accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
-      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken, // Fall back to old refresh token
+      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
     }
   } catch (error) {
     console.log("Error refreshing access token", error)

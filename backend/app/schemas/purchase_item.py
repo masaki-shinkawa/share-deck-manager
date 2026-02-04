@@ -1,0 +1,57 @@
+from sqlmodel import SQLModel, Field
+from typing import Optional, List
+from datetime import datetime
+from uuid import UUID
+from pydantic import model_validator
+
+from app.schemas.price_entry import PriceEntryPublic
+
+
+class AllocationInfo(SQLModel):
+    """購入割り当て情報"""
+    id: UUID
+    store_id: UUID
+    store_name: str
+    store_color: str
+    quantity: int
+
+
+class PurchaseItemCreate(SQLModel):
+    """購入アイテム作成スキーマ"""
+    # list_id comes from path parameter, not request body
+    card_id: Optional[UUID] = Field(default=None, description="Card ID (from cards table)")
+    custom_card_id: Optional[UUID] = Field(default=None, description="Custom card ID")
+    quantity: int = Field(ge=1, le=10, description="Total quantity needed (1-10)")
+
+    @model_validator(mode='after')
+    def check_card_reference(self):
+        """Exactly one of card_id or custom_card_id must be set."""
+        if self.card_id is None and self.custom_card_id is None:
+            raise ValueError('Either card_id or custom_card_id must be provided')
+        if self.card_id is not None and self.custom_card_id is not None:
+            raise ValueError('Only one of card_id or custom_card_id can be provided')
+        return self
+
+
+class PurchaseItemUpdate(SQLModel):
+    """購入アイテム更新スキーマ"""
+    quantity: Optional[int] = Field(default=None, ge=1, le=10, description="Total quantity needed (1-10)")
+
+
+class PurchaseItemPublic(SQLModel):
+    """購入アイテム公開スキーマ"""
+    id: UUID
+    list_id: UUID
+    card_id: Optional[UUID]
+    custom_card_id: Optional[UUID]
+    quantity: int
+    created_at: datetime
+
+
+class PurchaseItemWithCard(PurchaseItemPublic):
+    """カード情報と価格と購入割り当てを含む購入アイテム"""
+    card_name: Optional[str] = None
+    card_color: Optional[str] = None
+    card_image_path: Optional[str] = None
+    price_entries: List[PriceEntryPublic] = Field(default_factory=list)
+    allocations: List[AllocationInfo] = Field(default_factory=list)
