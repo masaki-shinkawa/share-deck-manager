@@ -174,10 +174,30 @@ export default function PurchasePage() {
     if (!idToken) return;
 
     try {
-      await allocationsApi.create(itemId, { store_id: storeId, quantity }, idToken);
-      await loadData();
+      const newAllocation = await allocationsApi.create(itemId, { store_id: storeId, quantity }, idToken);
+      // Update local state
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === itemId
+            ? {
+                ...item,
+                allocations: [
+                  ...item.allocations,
+                  {
+                    id: newAllocation.id,
+                    storeId: newAllocation.store_id,
+                    storeName: newAllocation.store_name,
+                    storeColor: newAllocation.store_color,
+                    quantity: newAllocation.quantity,
+                  },
+                ],
+              }
+            : item
+        )
+      );
     } catch (err) {
       alert('Failed to add allocation: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      await loadData(); // Reload on error
     }
   }
 
@@ -187,9 +207,18 @@ export default function PurchasePage() {
 
     try {
       await allocationsApi.update(allocationId, { quantity }, idToken);
-      await loadData();
+      // Update local state
+      setItems((prev) =>
+        prev.map((item) => ({
+          ...item,
+          allocations: item.allocations.map((alloc) =>
+            alloc.id === allocationId ? { ...alloc, quantity } : alloc
+          ),
+        }))
+      );
     } catch (err) {
       alert('Failed to update allocation: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      await loadData(); // Reload on error
     }
   }
 
@@ -199,9 +228,16 @@ export default function PurchasePage() {
 
     try {
       await allocationsApi.delete(allocationId, idToken);
-      await loadData();
+      // Update local state
+      setItems((prev) =>
+        prev.map((item) => ({
+          ...item,
+          allocations: item.allocations.filter((alloc) => alloc.id !== allocationId),
+        }))
+      );
     } catch (err) {
       alert('Failed to delete allocation: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      await loadData(); // Reload on error
     }
   }
 

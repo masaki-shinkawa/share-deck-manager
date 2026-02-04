@@ -22,23 +22,32 @@ interface QuantityInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEle
 
 function QuantityInput({ value, onCommit, min = 1, className, ...props }: QuantityInputProps) {
   const [localValue, setLocalValue] = useState<string>(value.toString());
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
-    setLocalValue(value.toString());
-  }, [value]);
+    // Only sync with external value when not focused and value actually changed
+    if (!isFocused && localValue !== value.toString()) {
+      setLocalValue(value.toString());
+    }
+  }, [value, isFocused, localValue]);
+
+  const handleFocus = () => {
+    setIsFocused(true);
+  };
 
   const handleBlur = () => {
     const parsed = parseInt(localValue);
     const newValue = isNaN(parsed) ? min : parsed;
 
-    // Reset display if needed
-    if (isNaN(parsed) || parsed < min) {
-      setLocalValue(newValue.toString());
-    }
+    // Update local value immediately to prevent flicker
+    setLocalValue(newValue.toString());
 
     if (newValue !== value) {
       onCommit(newValue);
     }
+
+    // Set isFocused to false after all updates
+    setIsFocused(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,6 +60,7 @@ function QuantityInput({ value, onCommit, min = 1, className, ...props }: Quanti
       min={min}
       value={localValue}
       onChange={handleChange}
+      onFocus={handleFocus}
       onBlur={handleBlur}
       className={className}
       {...props}
