@@ -1,0 +1,54 @@
+name: Database Migration
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'backend/migrations/**'
+      - 'backend/app/models/**'
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Alembic command (upgrade head, downgrade -1, etc.)'
+        required: true
+        default: 'upgrade head'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: 'backend/requirements.txt'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Run Alembic migration
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          cd backend
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            alembic ${{ github.event.inputs.command }}
+          else
+            alembic upgrade head
+          fi
+
+      - name: Verify migration
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          cd backend
+          alembic current

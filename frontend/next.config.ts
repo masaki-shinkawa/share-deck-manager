@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         hostname: "*.railway.app",
       },
       {
+        protocol: "https",
+        hostname: "*.vercel.app",
+      },
+      {
         protocol: "http",
         hostname: "localhost",
         port: "8000",

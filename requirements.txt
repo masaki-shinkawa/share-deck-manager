@@ -1,0 +1,43 @@
+# Vercel Python Serverless Functions dependencies
+# Based on backend/requirements.txt with additions for Vercel
+
+# FastAPI and ASGI
+fastapi==0.128.0
+starlette==0.50.0
+uvicorn==0.40.0
+mangum>=0.17.0  # ASGI adapter for AWS Lambda/Vercel Serverless
+
+# Pydantic
+pydantic==2.12.5
+pydantic-extra-types==2.11.0
+pydantic-settings==2.12.0
+pydantic_core==2.41.5
+
+# Database
+sqlmodel
+asyncpg
+psycopg2-binary
+
+# Authentication
+python-jose[cryptography]
+
+# HTTP Client
+requests
+httpx==0.28.1
+
+# Web Scraping
+beautifulsoup4
+lxml
+
+# Cloudflare R2 Storage
+boto3
+
+# Utilities
+python-dotenv==1.2.1
+python-multipart==0.0.21
+cachetools
+email-validator==2.3.0
+
+# Core dependencies
+anyio==4.12.0
+typing_extensions==4.15.0
