@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ユーザーロール
+enum UserRole {
+  admin
+  owner
+  member
+}
+
+// デッキステータス
+enum DeckStatus {
+  built
+  planning
+}
+
+// 購入ステータス
+enum PurchaseStatus {
+  planning
+  purchased
+}
+
+// ユーザー
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  googleId  String   @unique @map("google_id")
+  email     String   @unique
+  nickname  String?
+  image     String?
+  role      UserRole @default(admin)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  decks         Deck[]
+  customCards   CustomCard[]
+  stores        Store[]
+  purchaseLists PurchaseList[]
+
+  @@index([googleId])
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+// カード（リーダーカードライブラリ）
+model Card {
+  id        String   @id @default(uuid()) @db.Uuid
+  cardId    String   @unique @map("card_id")
+  name      String
+  color     String
+  blockIcon Int      @map("block_icon")
+  imagePath String   @map("image_path")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  decks         Deck[]
+  purchaseItems PurchaseItem[]
+
+  @@index([cardId])
+  @@map("cards")
+}
+
+// カスタムカード（ユーザー定義カード）
+model CustomCard {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String
+  color1    String
+  color2    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  decks         Deck[]
+  purchaseItems PurchaseItem[]
+
+  @@index([userId])
+  @@map("custom_cards")
+}
+
+// デッキ
+model Deck {
+  id           String     @id @default(uuid()) @db.Uuid
+  userId       String     @map("user_id") @db.Uuid
+  leaderCardId String?    @map("leader_card_id") @db.Uuid
+  customCardId String?    @map("custom_card_id") @db.Uuid
+  name         String
+  status       DeckStatus @default(built)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaderCard Card?       @relation(fields: [leaderCardId], references: [id], onDelete: Cascade)
+  customCard CustomCard? @relation(fields: [customCardId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([leaderCardId])
+  @@index([customCardId])
+  @@map("decks")
+}
+
+// ストア（カードショップマスタ）
+model Store {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String   @db.VarChar(50)
+  color     String   @db.VarChar(7)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  priceEntries        PriceEntry[]
+  purchaseAllocations PurchaseAllocation[]
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("stores")
+}
+
+// 購入リスト
+model PurchaseList {
+  id        String         @id @default(uuid()) @db.Uuid
+  userId    String         @map("user_id") @db.Uuid
+  name      String?        @db.VarChar(100)
+  status    PurchaseStatus @default(planning)
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items PurchaseItem[]
+
+  @@index([userId])
+  @@map("purchase_lists")
+}
+
+// 購入アイテム
+model PurchaseItem {
+  id           String   @id @default(uuid()) @db.Uuid
+  listId       String   @map("list_id") @db.Uuid
+  cardId       String?  @map("card_id") @db.Uuid
+  customCardId String?  @map("custom_card_id") @db.Uuid
+  quantity     Int      @default(1)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  list         PurchaseList         @relation(fields: [listId], references: [id], onDelete: Cascade)
+  card         Card?                @relation(fields: [cardId], references: [id], onDelete: SetNull)
+  customCard   CustomCard?          @relation(fields: [customCardId], references: [id], onDelete: SetNull)
+  priceEntries PriceEntry[]
+  allocations  PurchaseAllocation[]
+
+  @@index([listId])
+  @@map("purchase_items")
+}
+
+// 価格エントリ
+model PriceEntry {
+  id        String   @id @default(uuid()) @db.Uuid
+  itemId    String   @map("item_id") @db.Uuid
+  storeId   String   @map("store_id") @db.Uuid
+  price     Int?
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  item  PurchaseItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  store Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, storeId])
+  @@index([itemId])
+  @@index([storeId])
+  @@map("price_entries")
+}
+
+// 購入割り当て
+model PurchaseAllocation {
+  id        String   @id @default(uuid()) @db.Uuid
+  itemId    String   @map("item_id") @db.Uuid
+  storeId   String   @map("store_id") @db.Uuid
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  item  PurchaseItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  store Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([itemId])
+  @@map("purchase_allocations")
+}

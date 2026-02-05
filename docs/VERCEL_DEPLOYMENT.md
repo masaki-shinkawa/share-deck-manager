@@ -3,20 +3,21 @@
 ## 概要
 
 このガイドでは、Share Deck Managerを以下の構成でVercelにデプロイする方法を説明します：
-- **フロントエンド**: Next.js（Vercelネイティブサポート）
-- **バックエンド**: FastAPI（Vercel Python Serverless Functions）
+- **フロントエンド + API**: Next.js（API Routes使用）
+- **ORM**: Prisma
 - **データベース**: Vercel Postgres
 
 ## アーキテクチャ
 
 ```
 Vercel Platform
-├── Next.js フロントエンド (frontend/)
-├── FastAPI バックエンド (api/index.py → backend/app/)
-│   └── Python Serverless Functions
-│       └── 実行時間制限 10秒 (Hobby)
-│       └── 実行時間制限 60秒 (Pro)
-└── Vercel Postgres
+└── Next.js アプリケーション (frontend/)
+    ├── pages/ - フロントエンド
+    ├── app/api/v1/ - API Routes（バックエンド）
+    ├── app/lib/prisma.ts - データベース接続
+    └── app/lib/services/ - ビジネスロジック
+        ├── card-scraper.ts - カードスクレイピング
+        └── r2-storage.ts - Cloudflare R2連携
 ```
 
 ## デプロイ手順
@@ -29,7 +30,7 @@ Vercel Platform
 4. 以下を設定：
    - **Framework Preset**: Next.js
    - **Root Directory**: `.`（ルート）
-   - **Build Command**: `cd frontend && npm run build`
+   - **Build Command**: `cd frontend && npx prisma generate && npm run build`
    - **Output Directory**: `frontend/.next`
    - **Install Command**: `cd frontend && npm install`
 
@@ -58,13 +59,12 @@ Vercel Dashboard → Project → Settings → Environment Variables で設定：
 
 | 変数名 | 説明 | 例 |
 |--------|------|-----|
-| `DATABASE_URL` | PostgreSQL接続URL | `$POSTGRES_URL`（Vercel Postgresをリンク） |
+| `DATABASE_URL` | PostgreSQL接続URL | `$POSTGRES_PRISMA_URL`（Vercel Postgresをリンク） |
+| `DATABASE_URL_UNPOOLED` | 直接接続URL | `$POSTGRES_URL_NON_POOLING` |
 | `NEXTAUTH_URL` | NextAuth.jsのベースURL | `https://your-app.vercel.app` |
 | `NEXTAUTH_SECRET` | JWT署名用シークレット | `openssl rand -base64 32`で生成 |
 | `GOOGLE_CLIENT_ID` | Google OAuthクライアントID | `xxx.apps.googleusercontent.com` |
 | `GOOGLE_CLIENT_SECRET` | Google OAuthシークレット | `GOCSPX-xxx` |
-| `NEXT_PUBLIC_API_URL` | 公開API URL | `https://your-app.vercel.app/api/v1` |
-| `ALLOWED_ORIGINS` | CORS許可オリジン | `https://your-app.vercel.app` |
 
 #### オプション環境変数（Cloudflare R2）
 
@@ -90,12 +90,12 @@ GitHub → Repository → Settings → Secrets and variables → Actions で設�
 
 1. GitHub → Actions → 「Database Migration」に移動
 2. 「Run workflow」をクリック
-3. ブランチを選択し、デフォルトの`upgrade head`で実行
+3. ブランチを選択し、デフォルトの`migrate deploy`で実行
 
 または手動で実行：
 ```bash
-cd backend
-DATABASE_URL="your-postgres-url" alembic upgrade head
+cd frontend
+DATABASE_URL="your-postgres-url" npx prisma migrate deploy
 ```
 
 ### 6. Google OAuthの更新
@@ -111,72 +111,113 @@ DATABASE_URL="your-postgres-url" alembic upgrade head
 
 ```
 share-deck-manager/
-├── api/
-│   └── index.py          # Vercel Serverlessエントリーポイント
-├── backend/
-│   └── app/              # FastAPIアプリケーション
 ├── frontend/
-│   └── ...               # Next.jsアプリケーション
-├── vercel.json           # Vercel設定
-├── requirements.txt      # Vercel用Python依存関係
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── auth/[...nextauth]/  # NextAuth.js
+│   │   │   └── v1/                   # API Routes
+│   │   │       ├── users/
+│   │   │       ├── decks/
+│   │   │       ├── cards/
+│   │   │       ├── custom-cards/
+│   │   │       ├── stores/
+│   │   │       ├── purchases/
+│   │   │       ├── allocations/
+│   │   │       └── admin/
+│   │   └── lib/
+│   │       ├── prisma.ts             # Prismaクライアント
+│   │       ├── auth.ts               # 認証ヘルパー
+│   │       └── services/
+│   │           ├── card-scraper.ts   # スクレイピング
+│   │           └── r2-storage.ts     # R2ストレージ
+│   ├── prisma/
+│   │   └── schema.prisma             # Prismaスキーマ
+│   └── package.json
+├── vercel.json                        # Vercel設定
 └── .github/
     └── workflows/
-        └── migrate.yml   # マイグレーションCI/CD
+        └── migrate.yml               # マイグレーションCI/CD
 ```
 
-## 制限事項
+## API エンドポイント
 
-### Vercel Serverless Functions（Hobbyプラン）
+### ユーザー
+- `POST /api/v1/users/sync` - ユーザー同期
+- `GET /api/v1/users/me` - 現在のユーザー取得
+- `PUT /api/v1/users/me` - ユーザー更新
 
-| 制限 | 値 |
-|------|-----|
-| 実行タイムアウト | 10秒 |
-| メモリ | 1024 MB |
-| ペイロードサイズ | 4.5 MB |
-| コールドスタート | 約500ms〜2秒 |
+### デッキ
+- `GET /api/v1/decks` - デッキ一覧
+- `POST /api/v1/decks` - デッキ作成
+- `GET /api/v1/decks/grouped` - グループ化デッキ一覧
+- `GET /api/v1/decks/[id]` - デッキ詳細
+- `PATCH /api/v1/decks/[id]` - デッキ更新
+- `DELETE /api/v1/decks/[id]` - デッキ削除
 
-### スクレイピングが時間超過する場合
+### カード
+- `GET /api/v1/cards` - カード一覧
 
-スクレイピング処理が10秒を超える場合の対処法：
+### カスタムカード
+- `GET /api/v1/custom-cards` - カスタムカード一覧
+- `POST /api/v1/custom-cards` - カスタムカード作成
+- `DELETE /api/v1/custom-cards/[id]` - カスタムカード削除
 
-**オプションA: Proプランにアップグレード（$20/月）**
-- 実行時間制限が60秒に延長
-- コールドスタート時間の改善
+### ストア
+- `GET /api/v1/stores` - ストア一覧
+- `POST /api/v1/stores` - ストア作成
+- `PATCH /api/v1/stores/[id]` - ストア更新
+- `DELETE /api/v1/stores/[id]` - ストア削除
 
-**オプションB: バックエンドを分離**
-- フロントエンドはVercelに残す
-- FastAPIをRender/Fly.ioに移行（無料枠あり）
-- `NEXT_PUBLIC_API_URL`を外部バックエンドに向ける
+### 購入リスト
+- `GET /api/v1/purchases` - 購入リスト一覧
+- `POST /api/v1/purchases` - 購入リスト作成
+- `GET /api/v1/purchases/[listId]` - 購入リスト詳細
+- `PATCH /api/v1/purchases/[listId]` - 購入リスト更新
+- `DELETE /api/v1/purchases/[listId]` - 購入リスト削除
+- `GET /api/v1/purchases/[listId]/optimal-plan` - 最適購入プラン
 
-**オプションC: バックグラウンドジョブ**
-- Vercel Cron Jobsでスケジュール実行
-- 結果をデータベースに保存
-- APIはキャッシュ結果を返す
+### 購入アイテム
+- `GET /api/v1/purchases/[listId]/items` - アイテム一覧
+- `POST /api/v1/purchases/[listId]/items` - アイテム追加
+- `PATCH /api/v1/purchases/[listId]/items/[itemId]` - アイテム更新
+- `DELETE /api/v1/purchases/[listId]/items/[itemId]` - アイテム削除
+
+### 価格
+- `GET /api/v1/purchases/[listId]/items/[itemId]/prices` - 価格一覧
+- `PUT /api/v1/purchases/[listId]/items/[itemId]/prices/[storeId]` - 価格更新
+- `DELETE /api/v1/purchases/[listId]/items/[itemId]/prices/[storeId]` - 価格削除
+
+### 割り当て
+- `GET /api/v1/purchases/[listId]/items/[itemId]/allocations` - 割り当て一覧
+- `POST /api/v1/purchases/[listId]/items/[itemId]/allocations` - 割り当て作成
+- `PATCH /api/v1/allocations/[allocationId]` - 割り当て更新
+- `DELETE /api/v1/allocations/[allocationId]` - 割り当て削除
+
+### 管理者
+- `POST /api/v1/admin/scrape-cards` - カードスクレイピング
+- `GET /api/v1/admin/stats` - 統計情報
+- `GET /api/v1/admin/check-image-urls` - 画像URL確認
+- `POST /api/v1/admin/migrate-image-urls` - 画像URL移行
 
 ## トラブルシューティング
 
-### Python関数が動作しない
+### Prismaエラー
 
-1. `vercel.json`の`functions`設定が正しいか確認
-2. `requirements.txt`がルートディレクトリにあるか確認
-3. Vercelデプロイログでエラーを確認
+1. `prisma generate`が実行されているか確認
+2. `DATABASE_URL`が正しく設定されているか確認
+3. マイグレーションが正常に実行されたか確認
 
 ### データベース接続の問題
 
-1. `DATABASE_URL`がServerless用のPooling URLを使用しているか確認
+1. `DATABASE_URL`がPooling URL（`POSTGRES_PRISMA_URL`）を使用しているか確認
 2. Vercel Postgresがプロジェクトに接続されているか確認
 3. マイグレーションが正常に実行されたか確認
 
-### CORSエラー
+### 認証エラー
 
-1. `ALLOWED_ORIGINS`にVercel URLが含まれているか確認
-2. `vercel.json`のheaders設定が正しいか確認
-3. ブラウザコンソールで具体的なCORSエラーを確認
-
-### コールドスタートの問題
-
-- 非アクティブ後の最初のリクエストは遅くなる場合があります（1〜2秒）
-- レイテンシに敏感なエンドポイントにはVercel Edge Functionsの使用を検討
+1. `NEXTAUTH_SECRET`が設定されているか確認
+2. `GOOGLE_CLIENT_ID`と`GOOGLE_CLIENT_SECRET`が正しいか確認
+3. Google OAuthのリダイレクトURIが設定されているか確認
 
 ## モニタリング
 
@@ -190,7 +231,7 @@ share-deck-manager/
 
 ```bash
 # Vercel Dashboardで関数ログを確認
-Project → Logs → 「api/index」でフィルタ
+Project → Logs
 ```
 
 ## ロールバック
@@ -203,8 +244,20 @@ Project → Logs → 「api/index」でフィルタ
 
 ## ローカル開発
 
-Vercel設定をローカルでテストする場合：
+```bash
+cd frontend
 
+# 依存関係インストール
+npm install
+
+# Prismaクライアント生成
+npx prisma generate
+
+# 開発サーバー起動
+npm run dev
+```
+
+Vercel CLIを使う場合：
 ```bash
 # Vercel CLIをインストール
 npm i -g vercel
