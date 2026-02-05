@@ -11,6 +11,13 @@ export async function PATCH(request: Request, { params }: Params) {
     const body = await request.json();
     const { quantity } = body;
 
+    // 数量のバリデーション
+    if (quantity !== undefined) {
+      if (typeof quantity !== 'number' || quantity < 1 || quantity > 99) {
+        throw new ApiError(400, "Quantity must be between 1 and 99");
+      }
+    }
+
     // リスト所有者チェック
     const list = await prisma.purchaseList.findFirst({
       where: {

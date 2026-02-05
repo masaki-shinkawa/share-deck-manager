@@ -78,6 +78,11 @@ export async function POST(request: Request, { params }: Params) {
     const body = await request.json();
     const { cardId, customCardId, quantity = 1 } = body;
 
+    // 数量のバリデーション
+    if (typeof quantity !== 'number' || quantity < 1 || quantity > 99) {
+      throw new ApiError(400, "Quantity must be between 1 and 99");
+    }
+
     // リスト所有者チェック
     const list = await prisma.purchaseList.findFirst({
       where: {

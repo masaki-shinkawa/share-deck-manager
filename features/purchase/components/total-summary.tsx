@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import type { CardItem, Store } from '@/lib/types';
 
 interface TotalSummaryProps {
@@ -8,8 +9,8 @@ interface TotalSummaryProps {
 }
 
 export function TotalSummary({ items, stores }: TotalSummaryProps) {
-  // Calculate total from allocations
-  const calculateTotals = () => {
+  // Calculate total from allocations (memoized to prevent unnecessary recalculations)
+  const { totalPrice, storeTotalsArray } = React.useMemo(() => {
     let totalPrice = 0;
     const storeTotalsMap = new Map<string, number>();
     const storeItemsMap = new Map<
@@ -47,9 +48,7 @@ export function TotalSummary({ items, stores }: TotalSummaryProps) {
       .filter((st) => st.total > 0);
 
     return { totalPrice, storeTotalsArray };
-  };
-
-  const { totalPrice, storeTotalsArray } = calculateTotals();
+  }, [items, stores]);
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-4 sticky bottom-0">

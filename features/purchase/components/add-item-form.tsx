@@ -10,15 +10,38 @@ export function AddItemForm({ onAdd }: AddItemFormProps) {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [quantityInput, setQuantityInput] = useState('1');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onAdd(name.trim(), quantity);
+      // Ensure quantity is valid before submitting
+      const validQuantity = Math.max(1, Math.min(99, quantity));
+      onAdd(name.trim(), validQuantity);
       setName('');
       setQuantity(1);
+      setQuantityInput('1');
       setShowForm(false);
     }
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuantityInput(value);
+
+    // Update the actual quantity state if valid
+    const parsed = parseInt(value);
+    if (!isNaN(parsed)) {
+      setQuantity(Math.max(1, Math.min(99, parsed)));
+    }
+  };
+
+  const handleQuantityBlur = () => {
+    // On blur, ensure input shows valid number
+    const parsed = parseInt(quantityInput);
+    const validQuantity = isNaN(parsed) ? 1 : Math.max(1, Math.min(99, parsed));
+    setQuantity(validQuantity);
+    setQuantityInput(validQuantity.toString());
   };
 
   if (!showForm) {
@@ -51,9 +74,10 @@ export function AddItemForm({ onAdd }: AddItemFormProps) {
         <input
           type="number"
           min="1"
-          max="10"
-          value={quantity}
-          onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+          max="99"
+          value={quantityInput}
+          onChange={handleQuantityChange}
+          onBlur={handleQuantityBlur}
           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white"
         />
       </div>

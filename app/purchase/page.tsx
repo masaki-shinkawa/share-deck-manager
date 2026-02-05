@@ -49,10 +49,10 @@ export default function PurchasePage() {
   ): CardItem[] => {
     return apiItems.map((apiItem) => ({
       id: apiItem.id,
-      name: apiItem.card_name || '不明なカード',
+      name: apiItem.cardName || '不明なカード',
       quantity: apiItem.quantity,
       prices: apiStores.map((store) => {
-        const priceEntry = apiItem.price_entries?.find((p) => p.store_id === store.id);
+        const priceEntry = apiItem.priceEntries?.find((p) => p.storeId === store.id);
         return {
           storeId: store.id,
           price: priceEntry?.price ?? null,
@@ -60,9 +60,9 @@ export default function PurchasePage() {
       }),
       allocations: (apiItem.allocations || []).map((alloc) => ({
         id: alloc.id,
-        storeId: alloc.store_id,
-        storeName: alloc.store_name,
-        storeColor: alloc.store_color,
+        storeId: alloc.storeId,
+        storeName: alloc.storeName,
+        storeColor: alloc.storeColor,
         quantity: alloc.quantity,
       })),
     }));
@@ -153,11 +153,11 @@ export default function PurchasePage() {
         idToken
       );
 
-      // Create purchase item with the new custom_card_id
+      // Create purchase item with the new customCardId
       await purchaseItemsApi.create(
         purchaseList.id,
         {
-          custom_card_id: customCard.id,
+          customCardId: customCard.id,
           quantity,
         },
         idToken
@@ -174,7 +174,7 @@ export default function PurchasePage() {
     if (!idToken) return;
 
     try {
-      const newAllocation = await allocationsApi.create(itemId, { store_id: storeId, quantity }, idToken);
+      const newAllocation = await allocationsApi.create(itemId, { storeId, quantity }, idToken);
       // Update local state
       setItems((prev) =>
         prev.map((item) =>
@@ -185,9 +185,9 @@ export default function PurchasePage() {
                   ...item.allocations,
                   {
                     id: newAllocation.id,
-                    storeId: newAllocation.store_id,
-                    storeName: newAllocation.store_name,
-                    storeColor: newAllocation.store_color,
+                    storeId: newAllocation.storeId,
+                    storeName: newAllocation.storeName,
+                    storeColor: newAllocation.storeColor,
                     quantity: newAllocation.quantity,
                   },
                 ],

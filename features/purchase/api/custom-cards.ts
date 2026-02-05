@@ -2,12 +2,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export interface CustomCard {
   id: string;
-  user_id: string;
+  userId: string;
   name: string;
   color1: string;
   color2: string | null;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CustomCardCreate {
