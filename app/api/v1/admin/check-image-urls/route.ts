@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { withAuth, ApiError } from "@/app/lib/auth";
 import { Card } from "@prisma/client";
