@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { withAuth, ApiError } from "@/app/lib/auth";
+import { Card } from "@prisma/client";
 
 // GET /api/v1/admin/check-image-urls - 画像URL確認
 export async function GET(request: Request) {
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
       other: 0,
     };
 
-    const sampleUrls = cards.slice(0, 5).map((card) => ({
+    const sampleUrls = cards.slice(0, 5).map((card: Card) => ({
       cardId: card.cardId,
       imagePath: card.imagePath,
     }));
