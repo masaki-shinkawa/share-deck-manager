@@ -1096,7 +1096,7 @@ GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
 # API Endpoint (FastAPI)
-NEXT_PUBLIC_API_URL=http://localhost:8000/api  # 本番: https://your-domain.vercel.app/api
+NEXT_PUBLIC_API_URL=http://localhost:3000/api  # 本番: https://your-domain.vercel.app/api
 ```
 
 #### FastAPI（バックエンド）
@@ -1159,7 +1159,7 @@ GOOGLE_CLIENT_SECRET=
 # ----------------------------------------------
 # API Configuration
 # ----------------------------------------------
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_API_URL=http://localhost:3000/api
 
 # ----------------------------------------------
 # FastAPI Backend

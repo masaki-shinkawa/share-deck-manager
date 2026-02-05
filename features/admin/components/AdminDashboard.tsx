@@ -67,7 +67,7 @@ export default function AdminDashboard({ idToken }: AdminDashboardProps) {
   const [isCheckingUrls, setIsCheckingUrls] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
   const fetchStats = async () => {
     try {

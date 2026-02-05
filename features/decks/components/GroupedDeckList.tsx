@@ -62,7 +62,7 @@ export default function GroupedDeckList({ idToken, users: propUsers, decks: prop
     if (!idToken) return;
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/decks/grouped`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/decks/grouped`,
         {
           headers: {
             Authorization: `Bearer ${idToken}`,

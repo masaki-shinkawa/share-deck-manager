@@ -51,7 +51,7 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
   const fetchDecks = async () => {
     if (!idToken) return;
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/decks/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/decks/`, {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },
@@ -87,7 +87,7 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/decks/${deckId}`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/decks/${deckId}`,
         {
           method: "DELETE",
           headers: {
@@ -117,7 +117,7 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
     setIsUpdating(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/decks/${editingDeck.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/decks/${editingDeck.id}`,
         {
           method: "PATCH",
           headers: {

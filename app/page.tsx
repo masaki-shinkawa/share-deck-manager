@@ -18,7 +18,7 @@ export default async function DashboardPage() {
   let userData: DashboardUser | null = null;
 
   try {
-    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
     const token = session.idToken;
 
     if (!token) {

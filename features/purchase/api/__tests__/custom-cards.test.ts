@@ -13,7 +13,7 @@ describe('customCardsApi', () => {
     // Clear all mocks before each test
     jest.clearAllMocks();
     // Reset environment variable (without /api/v1, matches .env.local)
-    process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8000';
+    process.env.NEXT_PUBLIC_API_URL = 'http://localhost:3000';
   });
 
   afterEach(() => {
@@ -50,13 +50,13 @@ describe('customCardsApi', () => {
 
       // Assert - verify the URL does NOT contain /api/v1/api/v1
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/api/v1/custom-cards/',
+        'http://localhost:3000/api/v1/custom-cards/',
         expect.any(Object)
       );
 
       // Verify it was NOT called with duplicate path
       expect(global.fetch).not.toHaveBeenCalledWith(
-        'http://localhost:8000/api/v1/api/v1/custom-cards/',
+        'http://localhost:3000/api/v1/api/v1/custom-cards/',
         expect.any(Object)
       );
     });

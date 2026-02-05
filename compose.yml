@@ -24,23 +24,5 @@ services:
       - "8080:8080"
     restart: unless-stopped
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: deck-manager-backend
-    env_file:
-      - ./backend/.env.local
-    environment:
-      - PYTHONPATH=/app
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./backend:/app
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
-
 volumes:
   postgres_data:

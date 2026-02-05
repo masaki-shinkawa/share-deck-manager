@@ -39,7 +39,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
 
   const fetchCards = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/cards/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/cards/`, {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },
@@ -72,7 +72,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
     const deckName = `${selectedCard.color} ${selectedCard.name}`;
     setIsLoading(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/decks/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/decks/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -111,7 +111,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
     try {
       // Step 1: Create custom card
       const customCardResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/custom-cards/`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/custom-cards/`,
         {
           method: "POST",
           headers: {
@@ -133,7 +133,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
       const colorDisplay = manualColor2 ? `${manualColor1}/${manualColor2}` : manualColor1;
       const deckName = `${colorDisplay} ${manualName}`;
       const deckResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/decks/`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/decks/`,
         {
           method: "POST",
           headers: {
