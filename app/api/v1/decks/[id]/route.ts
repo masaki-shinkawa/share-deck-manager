@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { withAuth, ApiError } from "@/app/lib/auth";
-import { DeckStatus } from "@prisma/client";
+import { DeckStatus, DeckRegulation } from "@prisma/client";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -33,7 +33,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
   return withAuth(request, async (user) => {
     const body = await request.json();
-    const { status, name } = body;
+    const { status, name, regulation } = body;
 
     const deck = await prisma.deck.findFirst({
       where: {
@@ -51,6 +51,7 @@ export async function PATCH(request: Request, { params }: Params) {
       data: {
         ...(status && { status: status as DeckStatus }),
         ...(name && { name }),
+        ...(regulation && { regulation: regulation as DeckRegulation }),
       },
       include: {
         leaderCard: true,

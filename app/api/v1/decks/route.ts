@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { withAuth, ApiError } from "@/app/lib/auth";
-import { DeckStatus } from "@prisma/client";
+import { DeckStatus, DeckRegulation } from "@prisma/client";
 
 // GET /api/v1/decks - ユーザーのデッキ一覧
 export async function GET(request: Request) {
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   return withAuth(request, async (user) => {
     const body = await request.json();
-    const { name, leaderCardId, customCardId, status = "built" } = body;
+    const { name, leaderCardId, customCardId, status = "built", regulation = "standard" } = body;
 
     // カスタムカードが指定された場合、所有者チェック
     if (customCardId) {
@@ -44,6 +44,7 @@ export async function POST(request: Request) {
         leaderCardId,
         customCardId,
         status: status as DeckStatus,
+        regulation: regulation as DeckRegulation,
       },
       include: {
         leaderCard: true,

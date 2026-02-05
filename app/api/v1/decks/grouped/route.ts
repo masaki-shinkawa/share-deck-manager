@@ -53,6 +53,7 @@ export async function GET(request: Request) {
         leaderCard: deck.leaderCard,
         customCard: deck.customCard,
         status: deck.status,
+        regulation: deck.regulation,
         createdAt: deck.createdAt,
       })),
       totalCount: decks.length,

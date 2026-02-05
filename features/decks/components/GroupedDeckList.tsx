@@ -32,6 +32,7 @@ interface DeckWithUser {
   leaderCard: LeaderCardSummary | null;
   customCard?: CustomCardSummary | null;
   status: "built" | "planning";
+  regulation: "standard" | "extra";
   createdAt: string;
 }
 
@@ -173,14 +174,19 @@ export default function GroupedDeckList({ idToken, users: propUsers, decks: prop
               key={deck.id}
               className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-gray-800 dark:bg-zinc-900"
             >
-              {/* Status Badge */}
-              {deck.status === "planning" && (
-                <div className="absolute top-2 left-2 z-10">
+              {/* Status and Regulation Badges */}
+              <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+                {deck.status === "planning" && (
                   <span className="px-3 py-1 bg-yellow-500/90 text-gray-900 text-xs font-semibold rounded-full">
                     検討中
                   </span>
-                </div>
-              )}
+                )}
+                {deck.regulation === "extra" && (
+                  <span className="px-3 py-1 bg-purple-500/90 text-white text-xs font-semibold rounded-full">
+                    エクストラ
+                  </span>
+                )}
+              </div>
 
               <div className="flex items-center gap-4">
                 {deck.customCard && !deck.leaderCard ? (

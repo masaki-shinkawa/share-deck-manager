@@ -60,17 +60,18 @@ model CustomCard {
 }
 
 model Deck {
-  id           String      @id @default(uuid()) @db.Uuid
-  userId       String      @map("user_id") @db.Uuid
-  leaderCardId String?     @map("leader_card_id") @db.Uuid
-  customCardId String?     @map("custom_card_id") @db.Uuid
+  id           String         @id @default(uuid()) @db.Uuid
+  userId       String         @map("user_id") @db.Uuid
+  leaderCardId String?        @map("leader_card_id") @db.Uuid
+  customCardId String?        @map("custom_card_id") @db.Uuid
   name         String
-  status       DeckStatus  @default(built)
-  createdAt    DateTime    @default(now()) @map("created_at")
-  updatedAt    DateTime    @updatedAt @map("updated_at")
-  customCard   CustomCard? @relation(fields: [customCardId], references: [id], onDelete: Cascade)
-  leaderCard   Card?       @relation(fields: [leaderCardId], references: [id], onDelete: Cascade)
-  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status       DeckStatus     @default(built)
+  regulation   DeckRegulation @default(standard)
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  customCard   CustomCard?    @relation(fields: [customCardId], references: [id], onDelete: Cascade)
+  leaderCard   Card?          @relation(fields: [leaderCardId], references: [id], onDelete: Cascade)
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([leaderCardId])
@@ -162,6 +163,11 @@ enum UserRole {
 enum DeckStatus {
   built
   planning
+}
+
+enum DeckRegulation {
+  standard
+  extra
 }
 
 enum PurchaseStatus {
