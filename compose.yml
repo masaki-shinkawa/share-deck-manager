@@ -24,23 +24,25 @@ services:
       - "8080:8080"
     restart: unless-stopped
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: deck-manager-backend
-    env_file:
-      - ./backend/.env.local
+  minio:
+    image: minio/minio:latest
+    container_name: deck-manager-minio
+    command: server /data --console-address ":9001"
     environment:
-      - PYTHONPATH=/app
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
     ports:
-      - "8000:8000"
+      - "9000:9000"  # S3 API
+      - "9001:9001"  # Web Console
     volumes:
-      - ./backend:/app
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
     restart: unless-stopped
 
 volumes:
   postgres_data:
+  minio_data:

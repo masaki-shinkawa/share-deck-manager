@@ -440,7 +440,7 @@ GOOGLE_CLIENT_ID=<your_google_client_id>.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=<your_google_client_secret>
 
 # Backend API
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=http://localhost:3000
 ```
 
 **Backend** (`.env`):
@@ -567,7 +567,7 @@ useEffect(() => {
 3. **Backend Verification**:
    ```bash
    # Copy idToken from browser
-   curl -H "Authorization: Bearer <idToken>" http://localhost:8000/api/v1/decks
+   curl -H "Authorization: Bearer <idToken>" http://localhost:3000/api/v1/decks
    ```
 
 ### Unit Testing (Backend)
