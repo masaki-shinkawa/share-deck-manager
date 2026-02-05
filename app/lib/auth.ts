@@ -111,8 +111,18 @@ export async function withAuth<T>(
     if (error instanceof ApiError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
+    // 詳細なエラーログを出力
     console.error("API Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      userId: user.id,
+      endpoint: new URL(request.url).pathname,
+    });
+    return NextResponse.json({
+      error: "Internal Server Error",
+      details: process.env.NODE_ENV === "development" ? (error instanceof Error ? error.message : String(error)) : undefined
+    }, { status: 500 });
   }
 }
 

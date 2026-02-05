@@ -22,7 +22,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   return withAuth(request, async (user) => {
     const body = await request.json();
-    const { name, leaderCardId, customCardId, status = "built", regulation = "standard" } = body;
+    const { name, leader_card_id, custom_card_id, status = "built", regulation = "standard" } = body;
+    const leaderCardId = leader_card_id;
+    const customCardId = custom_card_id;
 
     // カスタムカードが指定された場合、所有者チェック
     if (customCardId) {
