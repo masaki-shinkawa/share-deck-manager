@@ -1,6 +1,39 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Share Deck Manager
+
+A deck metadata management web application with card image storage capabilities.
+
+### Documentation
+
+- **[MinIO Local Storage Setup](docs/MINIO_SETUP.md)** - Setup guide for local image storage using MinIO
+- **[CLAUDE.md](CLAUDE.md)** - Complete architecture and design documentation
+
 ## Getting Started
+
+### Prerequisites
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Start Docker services (PostgreSQL and MinIO):
+```bash
+docker compose up -d
+```
+
+3. Copy environment variables:
+```bash
+cp .env.example .env.local
+```
+
+4. Run database migrations:
+```bash
+npx prisma migrate dev
+```
+
+### Development Server
 
 First, run the development server:
 

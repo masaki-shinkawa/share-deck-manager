@@ -3,15 +3,16 @@ import {
   PutObjectCommand,
   HeadObjectCommand,
 } from "@aws-sdk/client-s3";
+import { ImageStorage, StorageError } from "./storage-interface";
 
-export class R2StorageError extends Error {
+export class R2StorageError extends StorageError {
   constructor(message: string) {
     super(message);
     this.name = "R2StorageError";
   }
 }
 
-export class R2Storage {
+export class R2Storage implements ImageStorage {
   private client: S3Client;
   private bucketName: string;
   private publicUrl: string;
@@ -45,8 +46,18 @@ export class R2Storage {
   /**
    * カード画像をR2にアップロード
    */
-  async uploadImage(cardId: string, imageData: Buffer): Promise<string> {
-    const key = `cards/${cardId}.jpg`;
+  async uploadImage(cardId: string, imageData: Buffer, extension: string): Promise<string> {
+    const key = `cards/${cardId}.${extension}`;
+
+    // Content-Typeのマッピング
+    const contentTypeMap: Record<string, string> = {
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      png: "image/png",
+      gif: "image/gif",
+      webp: "image/webp",
+    };
+    const contentType = contentTypeMap[extension.toLowerCase()] || "image/jpeg";
 
     try {
       await this.client.send(
@@ -54,7 +65,7 @@ export class R2Storage {
           Bucket: this.bucketName,
           Key: key,
           Body: imageData,
-          ContentType: "image/jpeg",
+          ContentType: contentType,
         })
       );
 
@@ -67,8 +78,8 @@ export class R2Storage {
   /**
    * 画像が既に存在するかチェック
    */
-  async imageExists(cardId: string): Promise<boolean> {
-    const key = `cards/${cardId}.jpg`;
+  async imageExists(cardId: string, extension: string): Promise<boolean> {
+    const key = `cards/${cardId}.${extension}`;
 
     try {
       await this.client.send(
@@ -89,8 +100,8 @@ export class R2Storage {
   /**
    * 画像の公開URLを取得
    */
-  getImageUrl(cardId: string): string {
-    return `${this.publicUrl}/cards/${cardId}.jpg`;
+  getImageUrl(cardId: string, extension: string): string {
+    return `${this.publicUrl}/cards/${cardId}.${extension}`;
   }
 }
 

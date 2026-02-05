@@ -12,10 +12,10 @@ interface UserSummary {
 
 interface LeaderCardSummary {
   id: string;
-  card_id: string;
+  cardId: string;
   name: string;
   color: string;
-  image_path: string;
+  imagePath: string;
 }
 
 interface CustomCardSummary {
@@ -29,10 +29,10 @@ interface DeckWithUser {
   id: string;
   name: string;
   user: UserSummary;
-  leader_card: LeaderCardSummary | null;
-  custom_card?: CustomCardSummary | null;
+  leaderCard: LeaderCardSummary | null;
+  customCard?: CustomCardSummary | null;
   status: "built" | "planning";
-  created_at: string;
+  createdAt: string;
 }
 
 interface GroupedDecksResponse {
@@ -103,8 +103,8 @@ export default function GroupedDeckList({ idToken, users: propUsers, decks: prop
     const matchesSearch =
       searchQuery === "" ||
       deck.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (deck.leader_card && deck.leader_card.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (deck.custom_card && deck.custom_card.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (deck.leaderCard && deck.leaderCard.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (deck.customCard && deck.customCard.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (deck.user.nickname && deck.user.nickname.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesUser && matchesSearch;
   });
@@ -183,20 +183,20 @@ export default function GroupedDeckList({ idToken, users: propUsers, decks: prop
               )}
 
               <div className="flex items-center gap-4">
-                {deck.custom_card && !deck.leader_card ? (
+                {deck.customCard && !deck.leaderCard ? (
                   <div className="relative flex h-20 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-gray-200 shadow-sm dark:bg-zinc-700">
                     <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
-                      {deck.custom_card.color2 ?
-                        `${deck.custom_card.color1}/${deck.custom_card.color2} ${deck.custom_card.name}`
-                        : `${deck.custom_card.color1} ${deck.custom_card.name}`
+                      {deck.customCard.color2 ?
+                        `${deck.customCard.color1}/${deck.customCard.color2} ${deck.customCard.name}`
+                        : `${deck.customCard.color1} ${deck.customCard.name}`
                       }
                     </span>
                   </div>
-                ) : deck.leader_card ? (
+                ) : deck.leaderCard ? (
                   <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded shadow-sm">
                     <Image
-                      src={deck.leader_card.image_path}
-                      alt={deck.leader_card.name}
+                      src={deck.leaderCard.imagePath}
+                      alt={deck.leaderCard.name}
                       width={224}
                       height={320}
                       quality={95}
@@ -225,7 +225,7 @@ export default function GroupedDeckList({ idToken, users: propUsers, decks: prop
                     </p>
                   </div>
                   <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
-                    Created: {new Date(deck.created_at).toLocaleDateString()}
+                    Created: {new Date(deck.createdAt).toLocaleDateString()}
                   </p>
                 </div>
               </div>

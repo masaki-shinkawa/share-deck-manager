@@ -5,10 +5,10 @@ import Image from "next/image";
 
 interface Card {
   id: string;
-  card_id: string;
+  cardId: string;
   name: string;
   color: string;
-  image_path: string;
+  imagePath: string;
 }
 
 interface DeckFormProps {
@@ -339,7 +339,7 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                       >
                         <div className="relative aspect-[2.5/3.5] overflow-hidden rounded">
                           <Image
-                            src={card.image_path}
+                            src={card.imagePath}
                             alt={card.name}
                             fill
                             sizes="(max-width: 768px) 33vw, 200px"

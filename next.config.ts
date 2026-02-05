@@ -25,6 +25,11 @@ const nextConfig: NextConfig = {
         port: "8000",
       },
       {
+        protocol: "http",
+        hostname: "localhost",
+        port: "9000",
+      },
+      {
         protocol: "https",
         hostname: "*.r2.dev",
       },

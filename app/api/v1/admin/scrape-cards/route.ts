@@ -17,15 +17,17 @@ export async function POST(request: Request) {
         status: "success",
         newCards: result.newCards,
         updatedCards: result.updatedCards,
+        skippedCards: result.skippedCards,
         totalCards: result.totalCards,
         errors: [],
-        message: `Scraping completed successfully. Added ${result.newCards} new cards, updated ${result.updatedCards} cards.`,
+        message: `Scraping completed successfully. Added ${result.newCards} new cards, updated ${result.updatedCards} cards, skipped ${result.skippedCards} existing cards.`,
       };
     } catch (error) {
       return {
         status: "error",
         newCards: 0,
         updatedCards: 0,
+        skippedCards: 0,
         totalCards: 0,
         errors: [String(error)],
         message: `Scraping failed: ${error}`,

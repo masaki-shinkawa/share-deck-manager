@@ -33,15 +33,15 @@ describe('GroupedDeckList', () => {
       name: 'テストデッキ',
       status: 'built' as const,
       user: mockUsers[0],
-      leader_card: {
+      leaderCard: {
         id: 'card-1',
-        card_id: 'OP01-001',
+        cardId: 'OP01-001',
         name: 'モンキー・D・ルフィ',
         color: '赤',
-        block_icon: 5,
-        image_path: 'https://example.com/card.jpg',
+        blockIcon: 5,
+        imagePath: 'https://example.com/card.jpg',
       },
-      created_at: '2024-01-01T00:00:00Z',
+      createdAt: '2024-01-01T00:00:00Z',
     },
   ];
 
@@ -90,14 +90,14 @@ describe('GroupedDeckList', () => {
           name: '赤 未発売リーダー',
           status: 'built' as const,
           user: mockUsers[0],
-          leader_card: null,
-          custom_card: {
+          leaderCard: null,
+          customCard: {
             id: 'custom-1',
             name: '未発売リーダー',
             color1: '赤',
             color2: null,
           },
-          created_at: '2024-01-01T00:00:00Z',
+          createdAt: '2024-01-01T00:00:00Z',
         },
       ];
 
@@ -124,19 +124,19 @@ describe('GroupedDeckList', () => {
           ...mockDecks[0],
           id: 'deck-1',
           status: 'built' as const,
-          leader_card: { ...mockDecks[0].leader_card, name: 'ルフィ' },
+          leaderCard: { ...mockDecks[0].leaderCard, name: 'ルフィ' },
         },
         {
           ...mockDecks[0],
           id: 'deck-2',
           status: 'built' as const,
-          leader_card: { ...mockDecks[0].leader_card, name: 'ゾロ' },
+          leaderCard: { ...mockDecks[0].leaderCard, name: 'ゾロ' },
         },
         {
           ...mockDecks[0],
           id: 'deck-3',
           status: 'built' as const,
-          leader_card: { ...mockDecks[0].leader_card, name: 'ナミ' },
+          leaderCard: { ...mockDecks[0].leaderCard, name: 'ナミ' },
         },
       ];
 

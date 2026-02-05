@@ -8,10 +8,10 @@ import DeckForm from "./DeckForm";
 
 interface Card {
   id: string;
-  card_id: string;
+  cardId: string;
   name: string;
   color?: string;
-  image_path: string;
+  imagePath: string;
 }
 
 interface CustomCardSummary {
@@ -24,12 +24,12 @@ interface CustomCardSummary {
 interface Deck {
   id: string;
   name: string;
-  leader_card_id?: string;
-  leader_card: Card | null;
-  custom_card?: CustomCardSummary | null;
+  leaderCardId?: string;
+  leaderCard: Card | null;
+  customCard?: CustomCardSummary | null;
   status: "built" | "planning";
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface DeckListProps {
@@ -170,20 +170,20 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
               )}
 
               <div className="flex items-center gap-4">
-                {deck.custom_card && !deck.leader_card ? (
+                {deck.customCard && !deck.leaderCard ? (
                   <div className="relative flex h-20 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-gray-200 shadow-sm dark:bg-zinc-700">
                     <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
-                      {deck.custom_card.color2 ?
-                        `${deck.custom_card.color1}/${deck.custom_card.color2} ${deck.custom_card.name}`
-                        : `${deck.custom_card.color1} ${deck.custom_card.name}`
+                      {deck.customCard.color2 ?
+                        `${deck.customCard.color1}/${deck.customCard.color2} ${deck.customCard.name}`
+                        : `${deck.customCard.color1} ${deck.customCard.name}`
                       }
                     </span>
                   </div>
-                ) : deck.leader_card ? (
+                ) : deck.leaderCard ? (
                   <div className="relative h-20 w-14 flex-shrink-0 overflow-hidden rounded shadow-sm">
                     <Image
-                      src={deck.leader_card.image_path}
-                      alt={deck.leader_card.name}
+                      src={deck.leaderCard.imagePath}
+                      alt={deck.leaderCard.name}
                       width={224}
                       height={320}
                       quality={95}
@@ -198,7 +198,7 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
                     {deck.name}
                   </h3>
                   <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
-                    作成日: {new Date(deck.created_at).toLocaleDateString()}
+                    作成日: {new Date(deck.createdAt).toLocaleDateString()}
                   </p>
                 </div>
               </div>

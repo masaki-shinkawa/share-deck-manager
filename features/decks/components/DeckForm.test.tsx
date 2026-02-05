@@ -27,31 +27,31 @@ describe('DeckForm - Leader Card Search', () => {
   const mockCards = [
     {
       id: '1',
-      card_id: 'OP01-001',
+      cardId: 'OP01-001',
       name: 'モンキー・D・ルフィ',
       color: '赤',
-      image_path: 'https://example.com/luffy.jpg',
+      imagePath: 'https://example.com/luffy.jpg',
     },
     {
       id: '2',
-      card_id: 'OP01-002',
+      cardId: 'OP01-002',
       name: 'ロロノア・ゾロ',
       color: '緑',
-      image_path: 'https://example.com/zoro.jpg',
+      imagePath: 'https://example.com/zoro.jpg',
     },
     {
       id: '3',
-      card_id: 'OP01-003',
+      cardId: 'OP01-003',
       name: 'ナミ',
       color: '赤',
-      image_path: 'https://example.com/nami.jpg',
+      imagePath: 'https://example.com/nami.jpg',
     },
     {
       id: '4',
-      card_id: 'OP01-004',
+      cardId: 'OP01-004',
       name: 'ウソップ',
       color: '黄',
-      image_path: 'https://example.com/usopp.jpg',
+      imagePath: 'https://example.com/usopp.jpg',
     },
   ];
 
@@ -210,8 +210,8 @@ describe('DeckForm - Leader Card Search', () => {
     it('should create deck with custom card when manual form is submitted', async () => {
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({ ok: true, json: async () => mockCards }) // fetch cards
-        .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 'custom-1', user_id: 'u1', name: '新リーダー', color1: '赤', color2: null }) }) // create custom card
-        .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 'deck-1', name: '赤 新リーダー', custom_card_id: 'custom-1' }) }); // create deck
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 'custom-1', userId: 'u1', name: '新リーダー', color1: '赤', color2: null }) }) // create custom card
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 'deck-1', name: '赤 新リーダー', customCardId: 'custom-1' }) }); // create deck
 
       render(<DeckForm idToken={mockIdToken} onDeckCreated={mockOnDeckCreated} />);
 
@@ -403,7 +403,7 @@ describe('DeckForm - Leader Card Search', () => {
           ok: true,
           json: async () => ({
             id: 'custom-1',
-            user_id: 'u1',
+            userId: 'u1',
             name: '単色リーダー',
             color1: '紫',
             color2: null
@@ -414,7 +414,7 @@ describe('DeckForm - Leader Card Search', () => {
           json: async () => ({
             id: 'deck-1',
             name: '紫デッキ',
-            custom_card_id: 'custom-1'
+            customCardId: 'custom-1'
           })
         });
 
@@ -474,7 +474,7 @@ describe('DeckForm - Leader Card Search', () => {
           ok: true,
           json: async () => ({
             id: 'custom-2',
-            user_id: 'u1',
+            userId: 'u1',
             name: '多色リーダー',
             color1: '赤',
             color2: '緑'
@@ -485,7 +485,7 @@ describe('DeckForm - Leader Card Search', () => {
           json: async () => ({
             id: 'deck-2',
             name: '赤/緑デッキ',
-            custom_card_id: 'custom-2'
+            customCardId: 'custom-2'
           })
         });
 
@@ -582,7 +582,7 @@ describe('DeckForm - Leader Card Search', () => {
           ok: true,
           json: async () => ({
             id: 'custom-3',
-            user_id: 'u1',
+            userId: 'u1',
             name: 'Auto-sorted Leader',
             color1: '赤',  // Backend auto-sorted
             color2: '黄'
@@ -593,7 +593,7 @@ describe('DeckForm - Leader Card Search', () => {
           json: async () => ({
             id: 'deck-3',
             name: 'Sorted Deck',
-            custom_card_id: 'custom-3'
+            customCardId: 'custom-3'
           })
         });
 

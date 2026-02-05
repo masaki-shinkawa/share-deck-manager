@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio";
 import { prisma } from "@/app/lib/prisma";
-import { getR2Storage, R2StorageError } from "./r2-storage";
+import { getStorageInstance } from "./storage-factory";
+import { StorageError } from "./storage-interface";
 
 const CARD_LIST_URL = "https://www.onepiece-cardgame.com/cardlist/";
 
@@ -10,11 +11,13 @@ interface CardData {
   color: string;
   blockIcon: number;
   imageUrl: string;
+  imageExtension: string; // 画像の拡張子 (jpg, png, etc.)
 }
 
 interface ScrapeResult {
   newCards: number;
   updatedCards: number;
+  skippedCards: number;
   totalCards: number;
 }
 
@@ -73,8 +76,16 @@ function parseCards(html: string): CardData[] {
         ? "https://www.onepiece-cardgame.com" + imageUrl.slice(2)
         : imageUrl;
 
-      // カードIDを画像ファイル名から抽出
-      const cardId = absoluteImageUrl.split("/").pop()?.replace(".jpg", "") ?? "";
+      // カードIDを画像ファイル名から抽出（クエリパラメータと拡張子を除去）
+      const urlWithoutQuery = absoluteImageUrl.split("?")[0]; // クエリパラメータを除去
+      const fileName = urlWithoutQuery.split("/").pop() ?? "";
+
+      // 拡張子を抽出
+      const extensionMatch = fileName.match(/\.(jpg|png|jpeg|gif|webp)$/i);
+      const imageExtension = extensionMatch ? extensionMatch[1].toLowerCase() : "jpg"; // デフォルトはjpg
+
+      // カードIDから拡張子を除去
+      const cardId = fileName.replace(/\.(jpg|png|jpeg|gif|webp)$/i, "");
 
       // カード名
       const name = $el.find(".cardName").text().trim() || "Unknown";
@@ -94,6 +105,7 @@ function parseCards(html: string): CardData[] {
         color,
         blockIcon,
         imageUrl: absoluteImageUrl,
+        imageExtension,
       });
     } catch (e) {
       console.error("Error parsing card:", e);
@@ -104,23 +116,24 @@ function parseCards(html: string): CardData[] {
 }
 
 /**
- * 画像をダウンロードしてR2にアップロード
+ * 画像をダウンロードしてストレージにアップロード
  */
 async function downloadAndUploadImage(
   imageUrl: string,
-  cardId: string
+  cardId: string,
+  extension: string
 ): Promise<string | null> {
   try {
-    const r2Storage = getR2Storage();
+    const storage = getStorageInstance();
 
-    // R2に既に存在するかチェック
-    if (await r2Storage.imageExists(cardId)) {
-      console.log(`✅ Image already exists in R2: ${cardId}`);
-      return r2Storage.getImageUrl(cardId);
+    // ストレージに既に存在するかチェック
+    if (await storage.imageExists(cardId, extension)) {
+      console.log(`✅ Image already exists in storage: ${cardId}.${extension}`);
+      return storage.getImageUrl(cardId, extension);
     }
 
     // 画像をダウンロード
-    console.log(`Downloading image for ${cardId}...`);
+    console.log(`Downloading image for ${cardId}.${extension}...`);
     const response = await fetch(imageUrl);
     if (!response.ok) {
       throw new Error(`Failed to download image: ${response.status}`);
@@ -128,19 +141,19 @@ async function downloadAndUploadImage(
 
     const arrayBuffer = await response.arrayBuffer();
     const imageBuffer = Buffer.from(arrayBuffer);
-    console.log(`Downloaded ${imageBuffer.length} bytes for ${cardId}`);
+    console.log(`Downloaded ${imageBuffer.length} bytes for ${cardId}.${extension}`);
 
-    // R2にアップロード
-    console.log(`Uploading ${cardId} to R2...`);
-    const r2Url = await r2Storage.uploadImage(cardId, imageBuffer);
-    console.log(`✅ Upload successful: ${cardId} -> ${r2Url}`);
+    // ストレージにアップロード
+    console.log(`Uploading ${cardId}.${extension} to storage...`);
+    const storageUrl = await storage.uploadImage(cardId, imageBuffer, extension);
+    console.log(`✅ Upload successful: ${cardId}.${extension} -> ${storageUrl}`);
 
-    return r2Url;
+    return storageUrl;
   } catch (error) {
-    if (error instanceof R2StorageError) {
-      console.error(`❌ R2 storage error for ${cardId}:`, error);
+    if (error instanceof StorageError) {
+      console.error(`❌ Storage error for ${cardId}.${extension}:`, error);
     } else {
-      console.error(`❌ Error downloading/uploading ${cardId}:`, error);
+      console.error(`❌ Error downloading/uploading ${cardId}.${extension}:`, error);
     }
     return null;
   }
@@ -156,47 +169,101 @@ export async function scrapeAndSaveCards(): Promise<ScrapeResult> {
 
   let newCards = 0;
   let updatedCards = 0;
+  let skippedCards = 0;
+
+  const storage = getStorageInstance();
 
   for (const cardData of cardsData) {
-    // 画像をダウンロードしてR2にアップロード
-    const r2Url = await downloadAndUploadImage(cardData.imageUrl, cardData.cardId);
-    if (!r2Url) continue;
-
-    // 既存のカードをチェック
-    const existingCard = await prisma.card.findUnique({
-      where: { cardId: cardData.cardId },
-    });
-
-    if (existingCard) {
-      // 既存のカードを更新
-      await prisma.card.update({
+    try {
+      // 1. DBで既存カードをチェック（処理順序の最適化）
+      const existingCard = await prisma.card.findUnique({
         where: { cardId: cardData.cardId },
-        data: {
+      });
+
+      // 2. カードが存在し、画像パスもある場合はスキップ
+      if (existingCard && existingCard.imagePath) {
+        console.log(`⏭️ Skipping existing card: ${cardData.cardId} (${cardData.name})`);
+        skippedCards++;
+        continue;
+      }
+
+      // 3. 画像が必要な場合のみアップロード
+      let storageUrl: string;
+
+      // 画像がストレージに存在するかチェック
+      const imageExists = await storage.imageExists(cardData.cardId, cardData.imageExtension);
+
+      if (imageExists) {
+        // 既存の画像URLを取得
+        storageUrl = storage.getImageUrl(cardData.cardId, cardData.imageExtension);
+        console.log(`✅ Image already exists in storage: ${cardData.cardId}.${cardData.imageExtension}`);
+      } else {
+        // 画像をダウンロードしてアップロード
+        const uploadedUrl = await downloadAndUploadImage(
+          cardData.imageUrl,
+          cardData.cardId,
+          cardData.imageExtension
+        );
+        if (!uploadedUrl) {
+          console.error(`❌ Failed to upload image for ${cardData.cardId}.${cardData.imageExtension}, skipping card`);
+          continue;
+        }
+        storageUrl = uploadedUrl;
+      }
+
+      // 4. upsertでアトミックに作成または更新（レースコンディション対策）
+      const result = await prisma.card.upsert({
+        where: { cardId: cardData.cardId },
+        update: {
           name: cardData.name,
           color: cardData.color,
           blockIcon: cardData.blockIcon,
-          imagePath: r2Url,
+          imagePath: storageUrl,
         },
-      });
-      updatedCards++;
-    } else {
-      // 新規カードを作成
-      await prisma.card.create({
-        data: {
+        create: {
           cardId: cardData.cardId,
           name: cardData.name,
           color: cardData.color,
           blockIcon: cardData.blockIcon,
-          imagePath: r2Url,
+          imagePath: storageUrl,
         },
       });
-      newCards++;
+
+      // カウントを更新
+      if (existingCard) {
+        console.log(`🔄 Updated card: ${cardData.cardId} (${cardData.name})`);
+        updatedCards++;
+      } else {
+        console.log(`✨ Created new card: ${cardData.cardId} (${cardData.name})`);
+        newCards++;
+      }
+    } catch (error: any) {
+      // P2002: Prismaの一意制約違反エラー（レースコンディション時）
+      if (error.code === "P2002") {
+        console.log(
+          `⚠️ Card ${cardData.cardId} already exists (concurrent execution detected), skipping`
+        );
+        skippedCards++;
+        continue;
+      }
+
+      // その他のエラーはログに記録して処理を続行
+      console.error(`❌ Error processing card ${cardData.cardId}:`, error);
+      continue;
     }
   }
+
+  // 結果サマリーをログ出力
+  console.log("\n📊 Scraping Summary:");
+  console.log(`  Total cards found: ${cardsData.length}`);
+  console.log(`  ✨ New cards created: ${newCards}`);
+  console.log(`  🔄 Cards updated: ${updatedCards}`);
+  console.log(`  ⏭️ Cards skipped: ${skippedCards}`);
 
   return {
     newCards,
     updatedCards,
+    skippedCards,
     totalCards: cardsData.length,
   };
 }
