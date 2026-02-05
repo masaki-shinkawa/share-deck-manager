@@ -42,7 +42,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            npx prisma ${{ github.event.inputs.command }}
+            npx prisma ${{ inputs.command }}
           else
             npx prisma migrate deploy
           fi
