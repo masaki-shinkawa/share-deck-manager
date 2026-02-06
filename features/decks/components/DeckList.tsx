@@ -45,6 +45,7 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
   const [isLoading, setIsLoading] = useState(!propDecks);
   const [editingDeck, setEditingDeck] = useState<Deck | null>(null);
   const [editStatus, setEditStatus] = useState<"built" | "planning">("built");
+  const [editRegulation, setEditRegulation] = useState<"standard" | "extra">("standard");
   const [isUpdating, setIsUpdating] = useState(false);
 
   const decks = propDecks ?? fetchedDecks;
@@ -110,6 +111,7 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
   const handleEditClick = (deck: Deck) => {
     setEditingDeck(deck);
     setEditStatus(deck.status);
+    setEditRegulation(deck.regulation);
   };
 
   const handleUpdateStatus = async () => {
@@ -125,7 +127,7 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
             "Content-Type": "application/json",
             Authorization: `Bearer ${idToken}`,
           },
-          body: JSON.stringify({ status: editStatus }),
+          body: JSON.stringify({ status: editStatus, regulation: editRegulation }),
         }
       );
 
@@ -251,6 +253,20 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
               >
                 <option value="built">構築済み</option>
                 <option value="planning">検討中</option>
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                レギュレーション
+              </label>
+              <select
+                value={editRegulation}
+                onChange={(e) => setEditRegulation(e.target.value as "standard" | "extra")}
+                className="w-full px-4 py-2 bg-white dark:bg-zinc-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="standard">スタンダード</option>
+                <option value="extra">エクストラ</option>
               </select>
             </div>
 
