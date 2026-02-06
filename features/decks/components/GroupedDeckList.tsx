@@ -39,7 +39,7 @@ interface DeckWithUser {
 interface GroupedDecksResponse {
   users: UserSummary[];
   decks: DeckWithUser[];
-  total_count: number;
+  totalCount: number;
 }
 
 interface GroupedDeckListProps {
@@ -57,7 +57,7 @@ export default function GroupedDeckList({ idToken, users: propUsers, decks: prop
 
   const users = propUsers ?? fetchedData?.users ?? [];
   const allDecks = propDecks ?? fetchedData?.decks ?? [];
-  const totalCount = propTotalCount ?? fetchedData?.total_count ?? 0;
+  const totalCount = propTotalCount ?? fetchedData?.totalCount ?? 0;
 
   const fetchGroupedDecks = async () => {
     if (!idToken) return;
