@@ -264,6 +264,32 @@ export default function DeckForm({ idToken, onDeckCreated }: DeckFormProps) {
                       ))}
                   </select>
                 </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    ステータス
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as "built" | "planning")}
+                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
+                  >
+                    <option value="built">構築済み</option>
+                    <option value="planning">検討中</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    レギュレーション
+                  </label>
+                  <select
+                    value={regulation}
+                    onChange={(e) => setRegulation(e.target.value as "standard" | "extra")}
+                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-zinc-800 dark:text-white"
+                  >
+                    <option value="standard">スタンダード</option>
+                    <option value="extra">エクストラ</option>
+                  </select>
+                </div>
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={() => setShowManualInput(false)}
