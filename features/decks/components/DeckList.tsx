@@ -163,20 +163,6 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
               key={deck.id}
               className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-gray-800 dark:bg-zinc-900"
             >
-              {/* Status and Regulation Badges */}
-              <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
-                {deck.status === "planning" && (
-                  <span className="px-3 py-1 bg-yellow-500/90 text-gray-900 text-xs font-semibold rounded-full">
-                    検討中
-                  </span>
-                )}
-                {deck.regulation === "extra" && (
-                  <span className="px-3 py-1 bg-purple-500/90 text-white text-xs font-semibold rounded-full">
-                    エクストラ
-                  </span>
-                )}
-              </div>
-
               <div className="flex items-center gap-4">
                 {deck.customCard && !deck.leaderCard ? (
                   <div className="relative flex h-20 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-gray-200 shadow-sm dark:bg-zinc-700">
@@ -202,12 +188,30 @@ export default function DeckList({ idToken, decks: propDecks, onEdit, onDelete }
                   </div>
                 ) : null}
                 <div className="flex-1 min-w-0">
-                  <h3 className="truncate font-bold text-gray-900 dark:text-white">
-                    {deck.name}
-                  </h3>
-                  <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
-                    作成日: {new Date(deck.createdAt).toLocaleDateString()}
-                  </p>
+                  {/* Line 1: Title + Created Date (right-aligned) */}
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="truncate font-bold text-gray-900 dark:text-white">
+                      {deck.name}
+                    </h3>
+                    <span className="flex-shrink-0 text-[10px] text-gray-400 dark:text-gray-500">
+                      作成日: {new Date(deck.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  {/* Line 3: Status + Regulation Badges */}
+                  {(deck.status === "planning" || deck.regulation === "extra") && (
+                    <div className="mt-1 flex items-center gap-1.5">
+                      {deck.status === "planning" && (
+                        <span className="px-2 py-0.5 bg-yellow-500/90 text-gray-900 text-[10px] font-semibold rounded-full">
+                          検討中
+                        </span>
+                      )}
+                      {deck.regulation === "extra" && (
+                        <span className="px-2 py-0.5 bg-purple-500/90 text-white text-[10px] font-semibold rounded-full">
+                          エクストラ
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
